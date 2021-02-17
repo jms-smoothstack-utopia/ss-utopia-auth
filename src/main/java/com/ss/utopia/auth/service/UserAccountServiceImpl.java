@@ -14,13 +14,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserAccountServiceImpl implements UserAccountService {
 
-  private final UserAccountRepository repository;
+  private final UserAccountRepository userAccountRepository;
   private final BCryptPasswordEncoder passwordEncoder;
   private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
-  public UserAccountServiceImpl(UserAccountRepository repository,
+  public UserAccountServiceImpl(UserAccountRepository userAccountRepository,
                                 BCryptPasswordEncoder passwordEncoder) {
-    this.repository = repository;
+    this.userAccountRepository = userAccountRepository;
     this.passwordEncoder = passwordEncoder;
   }
 
@@ -28,7 +28,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   public UserAccount createNewAccount(CreateUserAccountDto createUserAccountDto) {
     validateDto(createUserAccountDto);
 
-    repository.findByEmail(createUserAccountDto.getEmail())
+    userAccountRepository.findByEmail(createUserAccountDto.getEmail())
         .ifPresent(userAccount -> {
           throw new DuplicateEmailException(createUserAccountDto.getEmail());
         });
@@ -41,7 +41,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         .userRole(UserRole.DEFAULT)
         .build();
 
-    return repository.save(account);
+    return userAccountRepository.save(account);
   }
 
   private void validateDto(CreateUserAccountDto dto) {

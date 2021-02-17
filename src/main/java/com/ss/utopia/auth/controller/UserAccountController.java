@@ -19,16 +19,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserAccountController {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(UserAccountController.class);
-  private final UserAccountService service;
+  private final UserAccountService userAccountService;
 
-  public UserAccountController(UserAccountService service) {
-    this.service = service;
+  public UserAccountController(UserAccountService userAccountService) {
+    this.userAccountService = userAccountService;
   }
 
   @PostMapping(consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<Long> createNewAccount(@Valid @RequestBody CreateUserAccountDto createUserAccountDto) {
     LOGGER.info("POST accounts");
-    var userAccount = service.createNewAccount(createUserAccountDto);
+    var userAccount = userAccountService.createNewAccount(createUserAccountDto);
     var userId = userAccount.getId();
     var uri = URI.create(Constants.API_V_0_1_ACCOUNTS + "/" + userId);
     return ResponseEntity.created(uri).build();

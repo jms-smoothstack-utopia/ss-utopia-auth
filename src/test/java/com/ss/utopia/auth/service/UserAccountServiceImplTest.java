@@ -23,7 +23,8 @@ class UserAccountServiceImplTest {
 
   UserAccountRepository repository = Mockito.mock(UserAccountRepository.class);
   BCryptPasswordEncoder passwordEncoder = Mockito.mock(BCryptPasswordEncoder.class);
-  UserAccountService service = new UserAccountServiceImpl(repository, passwordEncoder);
+  UserAccountService serviceThatIsBeingTested = new UserAccountServiceImpl(repository,
+                                                                           passwordEncoder);
 
   @BeforeEach
   void beforeEach() {
@@ -65,7 +66,7 @@ class UserAccountServiceImplTest {
         .password(unhashedPassword)
         .build();
 
-    var result = service.createNewAccount(dto);
+    var result = serviceThatIsBeingTested.createNewAccount(dto);
 
     assertEquals(accountWithId, result);
   }
@@ -81,10 +82,11 @@ class UserAccountServiceImplTest {
         .password("abCD1234!@")
         .build();
 
-    assertThrows(DuplicateEmailException.class, () -> service.createNewAccount(dto));
+    assertThrows(DuplicateEmailException.class,
+                 () -> serviceThatIsBeingTested.createNewAccount(dto));
 
     try {
-      service.createNewAccount(dto);
+      serviceThatIsBeingTested.createNewAccount(dto);
     } catch (DuplicateEmailException ex) {
       var emailInEx = ex.getEmail();
       assertEquals(email, emailInEx);
@@ -105,27 +107,34 @@ class UserAccountServiceImplTest {
     dto.setPassword(validPassword);
 
     // sanity
-    assertDoesNotThrow(() -> service.createNewAccount(dto));
+    assertDoesNotThrow(() -> serviceThatIsBeingTested.createNewAccount(dto));
 
     dto.setEmail(null);
-    assertThrows(IllegalArgumentException.class, () -> service.createNewAccount(dto));
+    assertThrows(IllegalArgumentException.class,
+                 () -> serviceThatIsBeingTested.createNewAccount(dto));
 
     dto.setEmail("");
-    assertThrows(IllegalArgumentException.class, () -> service.createNewAccount(dto));
+    assertThrows(IllegalArgumentException.class,
+                 () -> serviceThatIsBeingTested.createNewAccount(dto));
 
     dto.setEmail("Definitely not an email");
-    assertThrows(IllegalArgumentException.class, () -> service.createNewAccount(dto));
+    assertThrows(IllegalArgumentException.class,
+                 () -> serviceThatIsBeingTested.createNewAccount(dto));
 
     dto.setEmail(validEmail);
     dto.setPassword(null);
-    assertThrows(IllegalArgumentException.class, () -> service.createNewAccount(dto));
+    assertThrows(IllegalArgumentException.class,
+                 () -> serviceThatIsBeingTested.createNewAccount(dto));
 
     dto.setPassword("");
-    assertThrows(IllegalArgumentException.class, () -> service.createNewAccount(dto));
+    assertThrows(IllegalArgumentException.class,
+                 () -> serviceThatIsBeingTested.createNewAccount(dto));
 
     dto.setPassword("asdfasdfasdf");
-    assertThrows(IllegalArgumentException.class, () -> service.createNewAccount(dto));
+    assertThrows(IllegalArgumentException.class,
+                 () -> serviceThatIsBeingTested.createNewAccount(dto));
 
-    assertThrows(IllegalArgumentException.class, () -> service.createNewAccount(null));
+    assertThrows(IllegalArgumentException.class,
+                 () -> serviceThatIsBeingTested.createNewAccount(null));
   }
 }
