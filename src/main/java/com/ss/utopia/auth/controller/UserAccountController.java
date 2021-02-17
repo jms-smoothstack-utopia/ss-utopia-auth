@@ -31,6 +31,6 @@ public class UserAccountController {
     var userAccount = userAccountService.createNewAccount(createUserAccountDto);
     var userId = userAccount.getId();
     var uri = URI.create(Constants.API_V_0_1_ACCOUNTS + "/" + userId);
-    return ResponseEntity.created(uri).build();
+    return ResponseEntity.created(uri).body(userId);
   }
 }
