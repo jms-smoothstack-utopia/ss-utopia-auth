@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ss.utopia.auth.config.Constants;
 import com.ss.utopia.auth.dto.CreateUserAccountDto;
+import com.ss.utopia.auth.entity.UserAccount;
 import com.ss.utopia.auth.exception.DuplicateEmailException;
 import com.ss.utopia.auth.repository.UserAccountRepository;
 import com.ss.utopia.auth.service.UserAccountService;
@@ -54,15 +55,19 @@ class UserAccountControllerTest {
         .build();
     var jsonDto = jsonMapper.writeValueAsString(createDto);
 
+
     var headerName = "Location";
-    var headerVal = Constants.API_V_0_1_ACCOUNTS;
+    var expectedHeaderVal = Constants.API_V_0_1_ACCOUNTS + "/1";
+
+    when(service.createNewAccount(createDto))
+        .thenReturn(UserAccount.builder().id(1L).build());
 
     mvc.perform(
         post(Constants.API_V_0_1_ACCOUNTS)
             .contentType(MediaType.APPLICATION_JSON_VALUE)
             .content(jsonDto))
         .andExpect(status().isCreated())
-        .andExpect(header().string(headerName, Matchers.containsString(headerVal)));
+        .andExpect(header().string(headerName, expectedHeaderVal));
   }
 
   @Test
