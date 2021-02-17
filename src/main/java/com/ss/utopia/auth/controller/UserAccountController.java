@@ -26,9 +26,10 @@ public class UserAccountController {
   }
 
   @PostMapping(consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity<Long> createAccount(@Valid @RequestBody CreateUserAccountDto createUserAccountDto) {
+  public ResponseEntity<Long> createNewAccount(@Valid @RequestBody CreateUserAccountDto createUserAccountDto) {
     LOGGER.info("POST accounts");
-    var userId = service.create(createUserAccountDto);
+    var userAccount = service.createNewAccount(createUserAccountDto);
+    var userId = userAccount.getId();
     var uri = URI.create(Constants.API_V_0_1_ACCOUNTS + "/" + userId);
     return ResponseEntity.created(uri).build();
   }

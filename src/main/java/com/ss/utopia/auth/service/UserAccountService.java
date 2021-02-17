@@ -1,8 +1,9 @@
 package com.ss.utopia.auth.service;
 
 import com.ss.utopia.auth.dto.CreateUserAccountDto;
+import com.ss.utopia.auth.entity.UserAccount;
 
 public interface UserAccountService {
 
-  Long create(CreateUserAccountDto createUserAccountDto);
+  UserAccount createNewAccount(CreateUserAccountDto createUserAccountDto);
 }

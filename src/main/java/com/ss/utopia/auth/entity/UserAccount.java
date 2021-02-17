@@ -1,13 +1,15 @@
 package com.ss.utopia.auth.entity;
 
-import java.util.List;
+import java.time.ZonedDateTime;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,7 +37,12 @@ public class UserAccount {
   @NotBlank
   private String hashedPassword;
 
+  @NotNull
   @EqualsAndHashCode.Exclude
-  @OneToMany
-  private List<UserRole> roles;
+  private ZonedDateTime creationDateTime = ZonedDateTime.now();
+
+  private boolean isConfirmed = false;
+
+  @Enumerated(EnumType.STRING)
+  private UserRole userRole = UserRole.DEFAULT;
 }
