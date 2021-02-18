@@ -13,6 +13,7 @@ import com.ss.utopia.auth.exception.DuplicateEmailException;
 import com.ss.utopia.auth.repository.UserAccountRepository;
 import java.time.ZonedDateTime;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -36,7 +37,7 @@ class UserAccountServiceImplTest {
   void test_createNewAccount_ReturnsCreatedAccountOnSuccess() {
     var now = ZonedDateTime.now();
 
-    var expectedId = 1L;
+    var expectedId = UUID.randomUUID();
     var email = "test@test.com";
     var unhashedPassword = "abCD1234!@";
     var hashedPassword = "ImFiQ0QxMjM0IUAi";

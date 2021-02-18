@@ -4,6 +4,7 @@ import com.ss.utopia.auth.config.Constants;
 import com.ss.utopia.auth.dto.CreateUserAccountDto;
 import com.ss.utopia.auth.service.UserAccountService;
 import java.net.URI;
+import java.util.UUID;
 import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,7 @@ public class UserAccountController {
   }
 
   @PostMapping(consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity<Long> createNewAccount(@Valid @RequestBody CreateUserAccountDto createUserAccountDto) {
+  public ResponseEntity<UUID> createNewAccount(@Valid @RequestBody CreateUserAccountDto createUserAccountDto) {
     LOGGER.info("POST accounts");
     var userAccount = userAccountService.createNewAccount(createUserAccountDto);
     var userId = userAccount.getId();

@@ -13,6 +13,7 @@ import com.ss.utopia.auth.entity.UserAccount;
 import com.ss.utopia.auth.exception.DuplicateEmailException;
 import com.ss.utopia.auth.repository.UserAccountRepository;
 import com.ss.utopia.auth.service.UserAccountService;
+import java.util.UUID;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,12 +56,13 @@ class UserAccountControllerTest {
         .build();
     var jsonDto = jsonMapper.writeValueAsString(createDto);
 
+    var uuid = UUID.randomUUID();
 
     var headerName = "Location";
-    var expectedHeaderVal = Constants.API_V_0_1_ACCOUNTS + "/1";
+    var expectedHeaderVal = Constants.API_V_0_1_ACCOUNTS + "/" + uuid;
 
     when(service.createNewAccount(createDto))
-        .thenReturn(UserAccount.builder().id(1L).build());
+        .thenReturn(UserAccount.builder().id(uuid).build());
 
     mvc.perform(
         post(Constants.API_V_0_1_ACCOUNTS)

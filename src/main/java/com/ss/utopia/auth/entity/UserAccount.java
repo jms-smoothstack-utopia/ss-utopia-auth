@@ -1,6 +1,7 @@
 package com.ss.utopia.auth.entity;
 
 import java.time.ZonedDateTime;
+import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -26,7 +27,7 @@ public class UserAccount {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
-  private Long id;
+  private UUID id;
 
   @NotBlank
   @Email
