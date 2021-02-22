@@ -7,14 +7,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ss.utopia.auth.config.Constants;
 import com.ss.utopia.auth.dto.CreateUserAccountDto;
 import com.ss.utopia.auth.entity.UserAccount;
 import com.ss.utopia.auth.exception.DuplicateEmailException;
 import com.ss.utopia.auth.repository.UserAccountRepository;
 import com.ss.utopia.auth.service.UserAccountService;
 import java.util.UUID;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,13 +57,13 @@ class UserAccountControllerTest {
     var uuid = UUID.randomUUID();
 
     var headerName = "Location";
-    var expectedHeaderVal = Constants.API_V_0_1_ACCOUNTS + "/" + uuid;
+    var expectedHeaderVal = EndpointConstants.ACCOUNTS_ENDPOINT + "/" + uuid;
 
     when(service.createNewAccount(createDto))
         .thenReturn(UserAccount.builder().id(uuid).build());
 
     mvc.perform(
-        post(Constants.API_V_0_1_ACCOUNTS)
+        post(EndpointConstants.ACCOUNTS_ENDPOINT)
             .contentType(MediaType.APPLICATION_JSON_VALUE)
             .content(jsonDto))
         .andExpect(status().isCreated())
@@ -85,7 +83,7 @@ class UserAccountControllerTest {
     var jsonDto = jsonMapper.writeValueAsString(createDto);
 
     mvc.perform(
-        post(Constants.API_V_0_1_ACCOUNTS)
+        post(EndpointConstants.ACCOUNTS_ENDPOINT)
             .contentType(MediaType.APPLICATION_JSON_VALUE)
             .content(jsonDto))
         .andExpect(status().isConflict());

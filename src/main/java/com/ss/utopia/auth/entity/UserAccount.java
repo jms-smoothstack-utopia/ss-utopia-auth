@@ -1,7 +1,10 @@
 package com.ss.utopia.auth.entity;
 
 import java.time.ZonedDateTime;
+import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -10,13 +13,16 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Entity
 @Data
@@ -38,12 +44,24 @@ public class UserAccount {
   @NotBlank
   private String hashedPassword;
 
-  @NotNull
-  @EqualsAndHashCode.Exclude
-  private ZonedDateTime creationDateTime = ZonedDateTime.now();
-
+  @Builder.Default
   private boolean isConfirmed = false;
 
+  @Builder.Default
   @Enumerated(EnumType.STRING)
   private UserRole userRole = UserRole.DEFAULT;
+
+  @Column(updatable = false)
+  @CreationTimestamp
+  private ZonedDateTime creationDateTime;
+
+  @UpdateTimestamp
+  private ZonedDateTime lastModifiedDateTime;
+
+  public Set<? extends GrantedAuthority> getUserRoleAsAuthority() {
+    if (userRole == null) {
+      return Collections.emptySet();
+    }
+    return Set.of(new SimpleGrantedAuthority(userRole.getRoleName()));
+  }
 }

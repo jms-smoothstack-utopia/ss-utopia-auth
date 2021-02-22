@@ -49,14 +49,12 @@ class UserAccountServiceImplTest {
         .id(expectedId)
         .email(email)
         .hashedPassword(hashedPassword)
-        .creationDateTime(now)
         .userRole(UserRole.DEFAULT)
         .build();
 
     var accountWithoutId = UserAccount.builder()
         .email(email)
         .hashedPassword(hashedPassword)
-        .creationDateTime(now)
         .userRole(UserRole.DEFAULT)
         .build();
 

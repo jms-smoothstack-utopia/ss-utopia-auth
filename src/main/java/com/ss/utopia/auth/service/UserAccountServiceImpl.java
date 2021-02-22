@@ -36,9 +36,6 @@ public class UserAccountServiceImpl implements UserAccountService {
     var account = UserAccount.builder()
         .email(createUserAccountDto.getEmail())
         .hashedPassword(passwordEncoder.encode(createUserAccountDto.getPassword()))
-        .creationDateTime(ZonedDateTime.now())
-        .isConfirmed(false)
-        .userRole(UserRole.DEFAULT)
         .build();
 
     return userAccountRepository.save(account);
