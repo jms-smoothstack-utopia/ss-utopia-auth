@@ -24,26 +24,23 @@ public class JwtAuthenticationVerificationFilter extends BasicAuthenticationFilt
   private final SecurityConstants securityConstants;
 
   public JwtAuthenticationVerificationFilter(AuthenticationManager authenticationManager,
-                                             SecurityConstants securityConstants) {
+      SecurityConstants securityConstants) {
     super(authenticationManager);
     this.securityConstants = securityConstants;
   }
 
   @Override
   protected void doFilterInternal(HttpServletRequest request,
-                                  HttpServletResponse response,
-                                  FilterChain chain) throws IOException, ServletException {
+      HttpServletResponse response,
+      FilterChain chain) throws IOException, ServletException {
     log.debug("doFilterInternal");
     var header = request.getHeader(securityConstants.getJwtHeaderName());
     try {
       if (header != null && header.startsWith(securityConstants.getJwtHeaderPrefix())) {
         var authToken = getAuthenticationToken(request);
         SecurityContextHolder.getContext().setAuthentication(authToken);
-        chain.doFilter(request, response);
-      } else {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().write("{\"error\":\"Missing or poorly formed authentication token.\"}");
       }
+      chain.doFilter(request, response);
     } catch (TokenExpiredException ex) {
       log.debug("Expired token");
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
