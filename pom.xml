@@ -9,7 +9,7 @@
     <version>2.4.2</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
-  <groupId>com.github.sgerkin-ss</groupId>
+  <groupId>com.github.jms-smoothstack-utopia</groupId>
   <artifactId>ss-utopia-auth</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>Utopia Auth Service</name>

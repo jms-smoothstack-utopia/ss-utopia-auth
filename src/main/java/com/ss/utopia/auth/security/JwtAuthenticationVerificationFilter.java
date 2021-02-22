@@ -38,13 +38,8 @@ public class JwtAuthenticationVerificationFilter extends BasicAuthenticationFilt
       if (header != null && header.startsWith(securityConstants.getJwtHeaderPrefix())) {
         var authToken = getAuthenticationToken(request);
         SecurityContextHolder.getContext().setAuthentication(authToken);
-        log.debug("Auth success.");
-        chain.doFilter(request, response);
-      } else {
-        log.debug("No Authorization header.");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().write("{\"error\":\"Missing or poorly formed authentication token.\"}");
       }
+      chain.doFilter(request, response);
     } catch (TokenExpiredException ex) {
       log.debug("Expired token");
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
