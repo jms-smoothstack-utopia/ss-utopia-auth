@@ -1,11 +1,11 @@
 package com.ss.utopia.auth.entity;
 
 public enum UserRole {
-  DEFAULT("DEFAULT"),
-  CUSTOMER("CUSTOMER"),
-  TRAVEL_AGENT("TRAVEL_AGENT"),
-  EMPLOYEE("EMPLOYEE"),
-  ADMIN("ADMIN");
+  DEFAULT("ROLE_DEFAULT"),
+  CUSTOMER("ROLE_CUSTOMER"),
+  TRAVEL_AGENT("ROLE_TRAVEL_AGENT"),
+  EMPLOYEE("ROLE_EMPLOYEE"),
+  ADMIN("ROLE_ADMIN");
 
   private final String roleName;
 
