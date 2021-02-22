@@ -33,14 +33,15 @@ public class JwtAuthenticationVerificationFilter extends BasicAuthenticationFilt
   protected void doFilterInternal(HttpServletRequest request,
                                   HttpServletResponse response,
                                   FilterChain chain) throws IOException, ServletException {
-    log.debug("doFilterInternal");
     var header = request.getHeader(securityConstants.getJwtHeaderName());
     try {
       if (header != null && header.startsWith(securityConstants.getJwtHeaderPrefix())) {
         var authToken = getAuthenticationToken(request);
         SecurityContextHolder.getContext().setAuthentication(authToken);
+        log.debug("Auth success.");
         chain.doFilter(request, response);
       } else {
+        log.debug("No Authorization header.");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.getWriter().write("{\"error\":\"Missing or poorly formed authentication token.\"}");
       }
@@ -52,7 +53,6 @@ public class JwtAuthenticationVerificationFilter extends BasicAuthenticationFilt
   }
 
   private UsernamePasswordAuthenticationToken getAuthenticationToken(HttpServletRequest request) {
-    log.debug("getAuthenticationToken");
     var token = request.getHeader(securityConstants.getJwtHeaderName());
     if (token != null) {
       //todo get roles from jwt?
