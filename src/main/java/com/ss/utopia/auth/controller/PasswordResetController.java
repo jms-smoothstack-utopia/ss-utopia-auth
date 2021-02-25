@@ -4,6 +4,7 @@ import com.ss.utopia.auth.dto.NewPasswordDto;
 import com.ss.utopia.auth.dto.ResetPasswordDto;
 import com.ss.utopia.auth.service.PasswordResetService;
 import java.util.Map;
+import java.util.Optional;
 import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,7 @@ public class PasswordResetController{
       produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<String> addPasswordReset(@Valid @RequestBody ResetPasswordDto resetPasswordDto){
     LOGGER.info("Initiating Password reset for: " + resetPasswordDto.getEmail());
-    return passwordResetService.addPasswordReset(resetPasswordDto);
+    return ResponseEntity.of(Optional.ofNullable(passwordResetService.addPasswordReset(resetPasswordDto)));
   }
 
   @PostMapping(value = "/new-password", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},

@@ -36,7 +36,7 @@ public class PasswordResetServiceImpl implements PasswordResetService{
   }
 
   @Override
-  public ResponseEntity<String> addPasswordReset(ResetPasswordDto resetPasswordDto) {
+  public String addPasswordReset(ResetPasswordDto resetPasswordDto) {
     var email = resetPasswordDto.getEmail();
     var userAccount = userAccountRepo.findByEmail(email);
     if (userAccount.isPresent()){
@@ -72,9 +72,11 @@ public class PasswordResetServiceImpl implements PasswordResetService{
           + "<h2><a href='" + customerUrl + "/login/password/resetform/" + customerToken + "'>Change email</a></h2>"
           + "<h3><span>Thanks</span></h3><h3>The Utopia team</h3>");
       RestTemplate emailRestTemplate = new RestTemplate();
-      return emailRestTemplate.postForEntity(mailUrl, emailToSend, String.class);
+      emailRestTemplate.postForEntity(mailUrl, emailToSend, String.class);
+
+      return customerToken;
     }
-    return ResponseEntity.notFound().build();
+    return null;
   }
 
   @Override

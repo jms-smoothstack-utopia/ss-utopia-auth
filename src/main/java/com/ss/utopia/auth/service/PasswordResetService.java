@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 
 public interface PasswordResetService {
 
-  ResponseEntity<String> addPasswordReset(ResetPasswordDto resetPasswordDto);
+  String addPasswordReset(ResetPasswordDto resetPasswordDto);
 
   ResponseEntity<Map<String, String>> verifyToken(NewPasswordDto newPasswordDto);
 }
