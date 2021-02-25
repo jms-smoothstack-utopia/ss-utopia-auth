@@ -24,8 +24,10 @@ public class PasswordReset {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(unique = true)
+  @Column(columnDefinition = "BINARY(16)")
   private UUID userId;
+
+  private String email;
 
   @Column(unique = true)
   private String token;

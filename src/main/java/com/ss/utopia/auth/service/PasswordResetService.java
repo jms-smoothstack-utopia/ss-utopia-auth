@@ -1,10 +1,13 @@
 package com.ss.utopia.auth.service;
 
+import com.ss.utopia.auth.dto.NewPasswordDto;
 import com.ss.utopia.auth.dto.ResetPasswordDto;
+import java.util.Map;
+import org.springframework.http.ResponseEntity;
 
 public interface PasswordResetService {
 
-  void addPasswordReset(ResetPasswordDto resetPasswordDto);
+  ResponseEntity<String> addPasswordReset(ResetPasswordDto resetPasswordDto);
 
-  void verifyToken(String token);
+  ResponseEntity<Map<String, String>> verifyToken(NewPasswordDto newPasswordDto);
 }
