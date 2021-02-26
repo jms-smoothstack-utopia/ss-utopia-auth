@@ -25,6 +25,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .antMatchers(HttpMethod.POST, EndpointConstants.ACCOUNTS_ENDPOINT).permitAll()
         .antMatchers(HttpMethod.POST, EndpointConstants.ACCOUNTS_ENDPOINT + "/password-reset").permitAll()
         .antMatchers(HttpMethod.POST, EndpointConstants.ACCOUNTS_ENDPOINT + "/new-password").permitAll()
+        .antMatchers(HttpMethod.GET, EndpointConstants.ACCOUNTS_ENDPOINT + "/new-password/{token}").permitAll()
         .anyRequest().authenticated()
         .and()
         .addFilter(new JwtAuthenticationFilter(authenticationManager(),

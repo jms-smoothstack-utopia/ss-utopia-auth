@@ -1,22 +1,22 @@
 package com.ss.utopia.auth.service;
 
-import com.ss.utopia.auth.dto.EmailDto;
+import com.ss.utopia.auth.client.EmailClient;
 import com.ss.utopia.auth.dto.NewPasswordDto;
 import com.ss.utopia.auth.dto.ResetPasswordDto;
 import com.ss.utopia.auth.entity.PasswordReset;
+import com.ss.utopia.auth.exception.EmailNotSentException;
 import com.ss.utopia.auth.repository.PasswordResetRepository;
 import com.ss.utopia.auth.repository.UserAccountRepository;
 import java.time.ZonedDateTime;
 import java.util.Map;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import java.util.Objects;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.client.RestTemplate;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PasswordResetServiceImpl implements PasswordResetService{
@@ -24,19 +24,23 @@ public class PasswordResetServiceImpl implements PasswordResetService{
   private final PasswordResetRepository passwordResetRepo;
   private final UserAccountRepository userAccountRepo;
   private final BCryptPasswordEncoder passwordEncoder;
+  private final EmailClient emailClient;
 
   public PasswordResetServiceImpl(
       PasswordResetRepository passwordResetRepo,
       UserAccountRepository userAccountRepo,
-      BCryptPasswordEncoder passwordEncoder
+      BCryptPasswordEncoder passwordEncoder,
+      EmailClient emailClient
       ) {
     this.passwordResetRepo = passwordResetRepo;
     this.userAccountRepo = userAccountRepo;
     this.passwordEncoder = passwordEncoder;
+    this.emailClient = emailClient;
   }
 
   @Override
-  public String addPasswordReset(ResetPasswordDto resetPasswordDto) {
+  @Transactional(rollbackFor = Exception.class)
+  public Map<String, String> addPasswordReset(ResetPasswordDto resetPasswordDto) {
     var email = resetPasswordDto.getEmail();
     var userAccount = userAccountRepo.findByEmail(email);
     if (userAccount.isPresent()){
@@ -61,26 +65,22 @@ public class PasswordResetServiceImpl implements PasswordResetService{
       //Save object into PasswordResetRepo
       passwordResetRepo.save(passwordResetEntry);
 
-      //Then need to send email here using SES
-      String mailUrl = "http://localhost:6900/api/v0.1/email";
-      EmailDto emailToSend = new EmailDto();
-      emailToSend.setEmail(email);
-      emailToSend.setSubject("Reset Utopia password");
-      String customerUrl = "http://localhost:4200";
-      emailToSend.setContent("<h1>Utopia password change</h1>"
-          + "<span>Please use this link to change your password (Link will expire in one day) </span>"
-          + "<h2><a href='" + customerUrl + "/login/password/resetform/" + customerToken + "'>Change email</a></h2>"
-          + "<h3><span>Thanks</span></h3><h3>The Utopia team</h3>");
-      RestTemplate emailRestTemplate = new RestTemplate();
-      emailRestTemplate.postForEntity(mailUrl, emailToSend, String.class);
+      //Send email using client
+      var emailResponse  = emailClient.sendForgetPasswordEmail(customerToken, email);
+      if (emailResponse.getStatusCodeValue() == 201){
 
-      return customerToken;
+        //Need to check the errorResponse
+        System.out.println(emailResponse);
+
+        return Map.of("token", customerToken, "emailBody",
+            Objects.requireNonNull(emailResponse.getBody()));
+      }
     }
     return null;
   }
 
   @Override
-  public ResponseEntity<Map<String, String>> verifyToken(NewPasswordDto newPasswordDto) {
+  public  Map<String, String> changePassword(NewPasswordDto newPasswordDto) {
     String token = newPasswordDto.getToken();
     var passwordResetRecord = passwordResetRepo.findByToken(token);
     if (passwordResetRecord.isPresent()){
@@ -88,30 +88,27 @@ public class PasswordResetServiceImpl implements PasswordResetService{
       var currentEntry = passwordResetRecord.get();
       var userAccount = userAccountRepo.findByEmail(currentEntry.getEmail());
 
-      if (userAccount.isEmpty()){
-        String errorMsg = "Server error with token:  " + token;
-        Map<String, String> jsonReturn = Map.of("message", errorMsg);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(jsonReturn);
+      if (userAccount.isEmpty() || !currentEntry.isActive()){
+        return null;
       }
 
       var account = userAccount.get();
-      System.out.println(account);
       account.setHashedPassword(passwordEncoder.encode(newPasswordDto.getPassword()));
       account.setLastModifiedDateTime(ZonedDateTime.now());
-      System.out.println(account);
       userAccountRepo.save(account);
 
       //update password reset
       currentEntry.setActive(false);
       passwordResetRepo.save(currentEntry);
 
-      Map<String, String> jsonReturn = Map.of("message", "Password reset successful");
-      return ResponseEntity.ok().body(jsonReturn);
+      return Map.of("message", "Password reset successful");
     }
-    else{
-      String errorMsg = "Server error with token:  " + token;
-      Map<String, String> jsonReturn = Map.of("message", errorMsg);
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(jsonReturn);
-    }
+      return null;
+  }
+
+  @Override
+  public boolean tokenCheck(String token) {
+    var passwordResetRecord = passwordResetRepo.findByToken(token);
+    return passwordResetRecord.isPresent();
   }
 }

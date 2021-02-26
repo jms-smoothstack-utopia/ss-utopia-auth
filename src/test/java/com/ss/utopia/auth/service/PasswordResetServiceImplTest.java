@@ -25,22 +25,18 @@ class PasswordResetServiceImplTest {
   UserAccountRepository userAccountRepository;
 
   @Test
-  void test() {
+  void test_entireProcess_PasswordChanges() {
+    var email = "test@test.com";
+    userAccountRepository.findByEmail(email).ifPresent(userAccountRepository::delete);
     var account = userAccountService.createNewAccount(CreateUserAccountDto.builder()
-                                                          .email("test3553@test.com")
-                                                          .password("abCD1234!@")
-                                                          .build());
-
-    var token = passwordResetService.addPasswordReset(new ResetPasswordDto("test@test.com"));
-
-    var resetDto = new NewPasswordDto(token, "ABcd1234!@");
-
-    assertDoesNotThrow(() -> passwordResetService.verifyToken(resetDto));
-
+        .email(email)
+        .password("abCD1234!@")
+        .build());
+    var token = passwordResetService.addPasswordReset(new ResetPasswordDto(email));
+    var resetDto = new NewPasswordDto(token.get("token"), "ABcd1234!@");
+    assertDoesNotThrow(() -> passwordResetService.changePassword(resetDto));
     var updatedAccount = userAccountRepository.findByEmail(account.getEmail());
-
     assertTrue(updatedAccount.isPresent());
-
-//    assertNotEquals(account.getHashedPassword(), updatedAccount.get().getHashedPassword());
+    assertNotEquals(account.getHashedPassword(), updatedAccount.get().getHashedPassword());
   }
 }
