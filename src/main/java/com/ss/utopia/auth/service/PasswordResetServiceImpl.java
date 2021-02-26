@@ -1,5 +1,6 @@
 package com.ss.utopia.auth.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ss.utopia.auth.client.EmailClient;
 import com.ss.utopia.auth.dto.NewPasswordDto;
 import com.ss.utopia.auth.dto.ResetPasswordDto;
@@ -10,6 +11,8 @@ import com.ss.utopia.auth.repository.UserAccountRepository;
 import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.json.JSONParser;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.sql.Timestamp;
 import java.util.Date;
@@ -18,6 +21,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class PasswordResetServiceImpl implements PasswordResetService{
 
@@ -69,8 +73,10 @@ public class PasswordResetServiceImpl implements PasswordResetService{
       var emailResponse  = emailClient.sendForgetPasswordEmail(customerToken, email);
       if (emailResponse.getStatusCodeValue() == 201){
 
-        //Need to check the errorResponse
-        System.out.println(emailResponse);
+        if (emailResponse.getBody().contains("error")){
+          log.info("Email was not sent. Perform rollback");
+          throw new EmailNotSentException();
+        }
 
         return Map.of("token", customerToken, "emailBody",
             Objects.requireNonNull(emailResponse.getBody()));
