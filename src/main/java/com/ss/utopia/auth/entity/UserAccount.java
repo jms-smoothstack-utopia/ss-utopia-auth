@@ -1,6 +1,7 @@
 package com.ss.utopia.auth.entity;
 
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
@@ -23,13 +24,14 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserAccount {
+public class UserAccount implements UserDetails {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
@@ -43,10 +45,7 @@ public class UserAccount {
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @NotBlank
-  private String hashedPassword;
-
-  @Builder.Default
-  private boolean isConfirmed = false;
+  private String password;
 
   @Builder.Default
   @Enumerated(EnumType.STRING)
@@ -59,10 +58,27 @@ public class UserAccount {
   @UpdateTimestamp
   private ZonedDateTime lastModifiedDateTime;
 
-  public Set<? extends GrantedAuthority> getUserRoleAsAuthority() {
+  @Builder.Default
+  private boolean accountNonExpired = true;
+  @Builder.Default
+  private boolean accountNonLocked = true;
+  @Builder.Default
+  private boolean credentialsNonExpired = true;
+  @Builder.Default
+  private boolean enabled = true;
+  @Builder.Default
+  private boolean confirmed = false;
+
+  public Collection<? extends GrantedAuthority> getAuthorities() {
     if (userRole == null) {
       return Collections.emptySet();
     }
     return Set.of(new SimpleGrantedAuthority(userRole.getRoleName()));
   }
+
+  @Override
+  public String getUsername() {
+    return email;
+  }
+
 }

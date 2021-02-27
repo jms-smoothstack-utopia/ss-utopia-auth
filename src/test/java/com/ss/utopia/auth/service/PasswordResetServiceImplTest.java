@@ -37,6 +37,6 @@ class PasswordResetServiceImplTest {
     assertDoesNotThrow(() -> passwordResetService.changePassword(resetDto));
     var updatedAccount = userAccountRepository.findByEmail(account.getEmail());
     assertTrue(updatedAccount.isPresent());
-    assertNotEquals(account.getHashedPassword(), updatedAccount.get().getHashedPassword());
+    assertNotEquals(account.getPassword(), updatedAccount.get().getPassword());
   }
 }
