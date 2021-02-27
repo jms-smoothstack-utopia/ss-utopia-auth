@@ -12,18 +12,18 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 @Service
 @ConfigurationProperties(value = "com.ss.utopia.email", ignoreUnknownFields = false)
-public class RestTemplateEmailClient implements EmailClient {
+public class RestTemplateEmailClient implements EmailClientInterface {
 
   private final String enpoint = "/registration";
   private final RestTemplateBuilder builder;
   private RestTemplate restTemplate;
 
-  @Override
+
   public void getAccountConfirmation(UserAccount account) {
 
   }
 
-  @Override
+
   public void setAccountConfirmed(UserAccount account) {
 
   }

@@ -24,7 +24,7 @@ public class JwtAuthenticationVerificationFilter extends BasicAuthenticationFilt
   private final SecurityConstants securityConstants;
 
   public JwtAuthenticationVerificationFilter(AuthenticationManager authenticationManager,
-                                             SecurityConstants securityConstants) {
+      SecurityConstants securityConstants) {
     super(authenticationManager);
     this.securityConstants = securityConstants;
   }

@@ -2,10 +2,8 @@ package com.ss.utopia.auth.service;
 
 import com.ss.utopia.auth.dto.CreateUserAccountDto;
 import com.ss.utopia.auth.entity.UserAccount;
-import com.ss.utopia.auth.entity.UserRole;
 import com.ss.utopia.auth.exception.DuplicateEmailException;
 import com.ss.utopia.auth.repository.UserAccountRepository;
-import java.time.ZonedDateTime;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
