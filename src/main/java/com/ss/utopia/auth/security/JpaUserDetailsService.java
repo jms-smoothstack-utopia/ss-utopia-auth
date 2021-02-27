@@ -22,12 +22,8 @@ public class JpaUserDetailsService implements UserDetailsService {
   public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
     log.debug("Load user: email=" + email);
 
-    var userAccount = userAccountRepository.findByEmail(email)
+    return userAccountRepository.findByEmail(email)
         .orElseThrow(() -> new UsernameNotFoundException(
             "User account with email '" + email + "' not found."));
-
-    return new User(userAccount.getEmail(),
-                    userAccount.getHashedPassword(),
-                    userAccount.getUserRoleAsAuthority());
   }
 }

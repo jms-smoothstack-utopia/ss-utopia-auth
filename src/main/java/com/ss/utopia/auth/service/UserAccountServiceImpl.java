@@ -33,7 +33,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     var account = UserAccount.builder()
         .email(createUserAccountDto.getEmail())
-        .hashedPassword(passwordEncoder.encode(createUserAccountDto.getPassword()))
+        .password(passwordEncoder.encode(createUserAccountDto.getPassword()))
         .build();
 
     return userAccountRepository.save(account);
