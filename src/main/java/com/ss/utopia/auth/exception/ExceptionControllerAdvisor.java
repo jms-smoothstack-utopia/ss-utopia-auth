@@ -47,7 +47,7 @@ public class ExceptionControllerAdvisor {
     return response;
   }
 
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
   @ExceptionHandler(NoSuchElementException.class)
   public Map<String, Object> handleNoSuchElementException(NoSuchElementException ex) {
     log.error((ex.getMessage()));
