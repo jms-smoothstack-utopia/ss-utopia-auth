@@ -38,8 +38,9 @@ public class RestTemplateEmailClient implements EmailClient {
 
   @Override
   public ResponseEntity<String> sendForgetPasswordEmail(String token, String email) {
-    //Will replace with lambda and API gateway
-    String mailUrl = apiHost + endpoint;
+    //String mailUrl = apiHost + endpoint;
+
+    String mailUrl = "https://c0uenga9m6.execute-api.us-east-1.amazonaws.com/beta";
 
     //Set email Dto
     EmailDto emailToSend = new EmailDto();

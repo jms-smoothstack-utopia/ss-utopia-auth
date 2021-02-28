@@ -8,9 +8,9 @@ import com.ss.utopia.auth.exception.EmailNotSentException;
 import com.ss.utopia.auth.repository.PasswordResetRepository;
 import com.ss.utopia.auth.repository.UserAccountRepository;
 import java.time.ZonedDateTime;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.sql.Timestamp;
@@ -22,13 +22,24 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class PasswordResetServiceImpl implements PasswordResetService{
 
   private final PasswordResetRepository passwordResetRepo;
   private final UserAccountRepository userAccountRepo;
   private final BCryptPasswordEncoder passwordEncoder;
   private final EmailClient emailClient;
+
+  public PasswordResetServiceImpl(
+      PasswordResetRepository passwordResetRepo,
+      UserAccountRepository userAccountRepo,
+      BCryptPasswordEncoder passwordEncoder,
+      EmailClient emailClient
+      ) {
+    this.passwordResetRepo = passwordResetRepo;
+    this.userAccountRepo = userAccountRepo;
+    this.passwordEncoder = passwordEncoder;
+    this.emailClient = emailClient;
+  }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
