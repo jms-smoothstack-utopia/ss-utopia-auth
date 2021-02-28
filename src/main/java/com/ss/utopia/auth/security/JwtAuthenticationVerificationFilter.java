@@ -24,7 +24,7 @@ public class JwtAuthenticationVerificationFilter extends BasicAuthenticationFilt
   private final SecurityConstants securityConstants;
 
   public JwtAuthenticationVerificationFilter(AuthenticationManager authenticationManager,
-                                             SecurityConstants securityConstants) {
+      SecurityConstants securityConstants) {
     super(authenticationManager);
     this.securityConstants = securityConstants;
   }
@@ -33,7 +33,6 @@ public class JwtAuthenticationVerificationFilter extends BasicAuthenticationFilt
   protected void doFilterInternal(HttpServletRequest request,
                                   HttpServletResponse response,
                                   FilterChain chain) throws IOException, ServletException {
-    log.debug("doFilterInternal");
     var header = request.getHeader(securityConstants.getJwtHeaderName());
     try {
       if (header != null && header.startsWith(securityConstants.getJwtHeaderPrefix())) {
@@ -49,7 +48,6 @@ public class JwtAuthenticationVerificationFilter extends BasicAuthenticationFilt
   }
 
   private UsernamePasswordAuthenticationToken getAuthenticationToken(HttpServletRequest request) {
-    log.debug("getAuthenticationToken");
     var token = request.getHeader(securityConstants.getJwtHeaderName());
     if (token != null) {
       //todo get roles from jwt?

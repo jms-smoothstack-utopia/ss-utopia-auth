@@ -3,7 +3,6 @@ package com.ss.utopia.auth.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ss.utopia.auth.controller.EndpointConstants;
 import java.util.Date;
-import lombok.Builder;
 import lombok.Data;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +23,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .cors().and().csrf().disable()
         .authorizeRequests()
         .antMatchers(HttpMethod.POST, EndpointConstants.ACCOUNTS_ENDPOINT).permitAll()
+        .antMatchers(HttpMethod.PUT, EndpointConstants.ACCOUNTS_ENDPOINT + "/confirm/**").permitAll()
+        .antMatchers(HttpMethod.POST, EndpointConstants.ACCOUNTS_ENDPOINT + "/password-reset").permitAll()
+        .antMatchers(HttpMethod.POST, EndpointConstants.ACCOUNTS_ENDPOINT + "/new-password").permitAll()
+        .antMatchers(HttpMethod.GET, EndpointConstants.ACCOUNTS_ENDPOINT + "/new-password/{token}").permitAll()
         .anyRequest().authenticated()
         .and()
         .addFilter(new JwtAuthenticationFilter(authenticationManager(),

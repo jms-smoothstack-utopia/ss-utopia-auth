@@ -10,7 +10,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,5 +41,11 @@ public class UserAccountController {
     var userId = userAccount.getId();
     var uri = URI.create(EndpointConstants.ACCOUNTS_ENDPOINT + "/" + userId);
     return ResponseEntity.created(uri).body(userId);
+  }
+
+  @PutMapping("/confirm/{confirmationTokenId}")
+  public ResponseEntity<?> confirmAccountRegistration(@PathVariable UUID confirmationTokenId) {
+    userAccountService.confirmAccountRegistration(confirmationTokenId);
+    return ResponseEntity.noContent().build();
   }
 }

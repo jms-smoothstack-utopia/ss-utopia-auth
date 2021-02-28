@@ -2,9 +2,9 @@ package com.ss.utopia.auth.exception;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,16 +12,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+@Slf4j
 @RestControllerAdvice
 public class ExceptionControllerAdvisor {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionControllerAdvisor.class);
-
 
   @ResponseStatus(HttpStatus.CONFLICT)
   @ExceptionHandler(DuplicateEmailException.class)
   public Map<String, Object> duplicateEmailException(DuplicateEmailException ex) {
-    LOGGER.error(ex.getMessage());
+    log.error(ex.getMessage());
 
     return Map.of("error", "duplicate email, account already exists.",
                   "email", ex.getEmail());
@@ -30,7 +28,7 @@ public class ExceptionControllerAdvisor {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public Map<String, Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
-    LOGGER.error(ex.getMessage());
+    log.error(ex.getMessage());
 
     var response = new HashMap<String, Object>();
 
@@ -49,11 +47,23 @@ public class ExceptionControllerAdvisor {
     return response;
   }
 
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  @ExceptionHandler(NoSuchElementException.class)
+  public Map<String, Object> handleNoSuchElementException(NoSuchElementException ex) {
+    log.error((ex.getMessage()));
+
+    var response = new HashMap<String, Object>();
+    response.put("error", ex.getMessage());
+    response.put("status", HttpStatus.BAD_REQUEST.value());
+
+    return response;
+  }
+
   private String getErrorMessageOrDefault(FieldError error) {
     var msg = error.getDefaultMessage();
     msg = msg == null || msg.isBlank() ? "Unknown validation failure." : msg;
 
-    LOGGER.debug("Field" + error.getField() + " Message: " + msg);
+    log.debug("Field" + error.getField() + " Message: " + msg);
     return msg;
   }
 }
