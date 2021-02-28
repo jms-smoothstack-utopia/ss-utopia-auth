@@ -23,6 +23,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .cors().and().csrf().disable()
         .authorizeRequests()
         .antMatchers(HttpMethod.POST, EndpointConstants.ACCOUNTS_ENDPOINT).permitAll()
+        .antMatchers(HttpMethod.PUT, EndpointConstants.ACCOUNTS_ENDPOINT + "/confirm/**").permitAll()
         .antMatchers(HttpMethod.POST, EndpointConstants.ACCOUNTS_ENDPOINT + "/password-reset").permitAll()
         .antMatchers(HttpMethod.POST, EndpointConstants.ACCOUNTS_ENDPOINT + "/new-password").permitAll()
         .antMatchers(HttpMethod.GET, EndpointConstants.ACCOUNTS_ENDPOINT + "/new-password/{token}").permitAll()

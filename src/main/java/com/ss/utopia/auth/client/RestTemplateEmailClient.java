@@ -1,8 +1,12 @@
 package com.ss.utopia.auth.client;
 
+import com.ss.utopia.auth.client.email.AccountConfirmationEmail;
 import com.ss.utopia.auth.dto.EmailDto;
+import com.ss.utopia.auth.exception.EmailNotSentException;
+import java.util.UUID;
 import javax.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -18,7 +22,12 @@ import org.springframework.web.client.RestTemplate;
 public class RestTemplateEmailClient implements EmailClient {
 
   private final String endpoint = "/beta";
+
+  @Setter
   private String apiHost;
+  @Setter
+  private String confirmationBaseUrl;
+
   private RestTemplateBuilder builder;
   private RestTemplate restTemplate;
 
@@ -32,9 +41,6 @@ public class RestTemplateEmailClient implements EmailClient {
     restTemplate = builder.build();
   }
 
-  public void setApiHost(String apiHost) {
-    this.apiHost = apiHost;
-  }
 
   @Override
   public ResponseEntity<String> sendForgetPasswordEmail(String token, String email) {
@@ -57,5 +63,25 @@ public class RestTemplateEmailClient implements EmailClient {
 
     //Send response
     return restTemplate.postForEntity(mailUrl, emailToSend, String.class);
+  }
+
+  @Override
+  public void sendConfirmAccountEmail(String recipientEmail, UUID confirmationToken) {
+    var postToUrl = apiHost + endpoint;
+
+    var confirmationUrl = confirmationBaseUrl + "/" + confirmationToken;
+
+    var email = new AccountConfirmationEmail(recipientEmail, confirmationUrl);
+    var response = restTemplate.postForEntity(postToUrl, email, String.class);
+
+    if (response.getStatusCode().is2xxSuccessful()) {
+      log.info("Account creation confirmation email sent to: " + recipientEmail);
+    } else {
+      //todo retry if possible
+      log.error("Unable to send confirmation email.");
+      log.error("Status code: " + response.getStatusCode().value());
+      log.error("Response body: " + response.getBody());
+      throw new EmailNotSentException(response.getBody(), response.getStatusCode());
+    }
   }
 }

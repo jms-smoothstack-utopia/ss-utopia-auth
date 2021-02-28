@@ -6,11 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import com.ss.utopia.auth.client.EmailClient;
 import com.ss.utopia.auth.dto.CreateUserAccountDto;
 import com.ss.utopia.auth.entity.UserAccount;
 import com.ss.utopia.auth.entity.UserRole;
 import com.ss.utopia.auth.exception.DuplicateEmailException;
-import com.ss.utopia.auth.repository.PasswordResetRepository;
+import com.ss.utopia.auth.repository.AccountActionTokenRepository;
 import com.ss.utopia.auth.repository.UserAccountRepository;
 import java.time.ZonedDateTime;
 import java.util.Optional;
@@ -23,14 +24,20 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 class UserAccountServiceImplTest {
 
 
-  UserAccountRepository repository = Mockito.mock(UserAccountRepository.class);
+  UserAccountRepository userAccountRepository = Mockito.mock(UserAccountRepository.class);
   BCryptPasswordEncoder passwordEncoder = Mockito.mock(BCryptPasswordEncoder.class);
-  UserAccountService serviceThatIsBeingTested = new UserAccountServiceImpl(repository,
-                                                                           passwordEncoder);
+  AccountActionTokenRepository accountActionTokenRepository = Mockito.mock(
+      AccountActionTokenRepository.class);
+  EmailClient emailClient = Mockito.mock(EmailClient.class);
+
+  UserAccountService serviceThatIsBeingTested = new UserAccountServiceImpl(userAccountRepository,
+                                                                           passwordEncoder,
+                                                                           accountActionTokenRepository,
+                                                                           emailClient);
 
   @BeforeEach
   void beforeEach() {
-    Mockito.reset(repository);
+    Mockito.reset(userAccountRepository);
 
   }
 
@@ -59,7 +66,7 @@ class UserAccountServiceImplTest {
         .userRole(UserRole.DEFAULT)
         .build();
 
-    when(repository.save(accountWithoutId)).thenReturn(accountWithId);
+    when(userAccountRepository.save(accountWithoutId)).thenReturn(accountWithId);
 
     var dto = CreateUserAccountDto.builder()
         .email(email)
@@ -74,7 +81,7 @@ class UserAccountServiceImplTest {
   @Test
   void test_createNewAccount_ThrowsDuplicateEmailExceptionOnDuplicateEmailAccount() {
     var email = "test@test.com";
-    when(repository.findByEmail(anyString()))
+    when(userAccountRepository.findByEmail(anyString()))
         .thenReturn(Optional.of(UserAccount.builder().build()));
 
     var dto = CreateUserAccountDto.builder()
@@ -95,7 +102,7 @@ class UserAccountServiceImplTest {
 
   @Test
   void test_createNewAccount_ThrowsIllegalArgumentExceptionOnInvalidDTO() {
-    when(repository.findByEmail(anyString()))
+    when(userAccountRepository.findByEmail(anyString()))
         .thenReturn(Optional.empty());
 
     var validEmail = "test@test.com";
