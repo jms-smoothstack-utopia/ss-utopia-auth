@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @CrossOrigin
 @RestController
-@RequestMapping(EndpointConstants.ACCOUNTS_ENDPOINT)
+@RequestMapping(EndpointConstants.API_V_0_1_ACCOUNTS)
 public class PasswordResetController{
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PasswordResetController.class);

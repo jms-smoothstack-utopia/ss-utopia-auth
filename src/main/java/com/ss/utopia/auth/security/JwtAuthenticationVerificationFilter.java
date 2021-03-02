@@ -3,7 +3,6 @@ package com.ss.utopia.auth.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.TokenExpiredException;
-import com.ss.utopia.auth.security.SecurityConfig.SecurityConstants;
 import java.io.IOException;
 import java.util.Collections;
 import javax.servlet.FilterChain;
@@ -24,7 +23,7 @@ public class JwtAuthenticationVerificationFilter extends BasicAuthenticationFilt
   private final SecurityConstants securityConstants;
 
   public JwtAuthenticationVerificationFilter(AuthenticationManager authenticationManager,
-      SecurityConstants securityConstants) {
+                                             SecurityConstants securityConstants) {
     super(authenticationManager);
     this.securityConstants = securityConstants;
   }

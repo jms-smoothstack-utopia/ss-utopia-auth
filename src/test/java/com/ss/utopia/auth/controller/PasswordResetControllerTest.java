@@ -13,7 +13,6 @@ import com.ss.utopia.auth.exception.EmailNotSentException;
 import com.ss.utopia.auth.repository.PasswordResetRepository;
 import com.ss.utopia.auth.repository.UserAccountRepository;
 import com.ss.utopia.auth.service.PasswordResetService;
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,7 +63,7 @@ public class PasswordResetControllerTest {
     when(passwordResetService.addPasswordReset(any(resetPasswordDto.getClass()))).thenReturn(Map.of("token", token));
 
     mvc.perform(
-        post(EndpointConstants.ACCOUNTS_ENDPOINT + "/password-reset")
+        post(EndpointConstants.API_V_0_1_ACCOUNTS + "/password-reset")
           .contentType(MediaType.APPLICATION_JSON)
           .content(jsonDto))
         .andExpect(status().isOk());
@@ -81,7 +80,7 @@ public class PasswordResetControllerTest {
     when(passwordResetService.addPasswordReset(any(resetPasswordDto.getClass()))).thenReturn(null);
 
     mvc.perform(
-        post(EndpointConstants.ACCOUNTS_ENDPOINT + "/password-reset")
+        post(EndpointConstants.API_V_0_1_ACCOUNTS + "/password-reset")
             .contentType(MediaType.APPLICATION_JSON)
             .content(jsonDto))
         .andExpect(status().isNotFound());
@@ -99,7 +98,7 @@ public class PasswordResetControllerTest {
         .thenThrow(new EmailNotSentException());
 
     mvc.perform(
-        post(EndpointConstants.ACCOUNTS_ENDPOINT + "/password-reset")
+        post(EndpointConstants.API_V_0_1_ACCOUNTS + "/password-reset")
             .contentType(MediaType.APPLICATION_JSON)
             .content(jsonDto))
         .andExpect(status().is5xxServerError());
@@ -113,7 +112,7 @@ public class PasswordResetControllerTest {
     when(passwordResetService.tokenCheck(token)).thenReturn(Boolean.TRUE);
 
     mvc.perform(
-        get(EndpointConstants.ACCOUNTS_ENDPOINT + "/new-password/" + token)
+        get(EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password/" + token)
         .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk());
   }
@@ -126,7 +125,7 @@ public class PasswordResetControllerTest {
     when(passwordResetService.tokenCheck(token)).thenReturn(Boolean.FALSE);
 
     mvc.perform(
-        get(EndpointConstants.ACCOUNTS_ENDPOINT + "/new-password/" + token)
+        get(EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password/" + token)
             .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound());
   }
@@ -147,7 +146,7 @@ public class PasswordResetControllerTest {
     when(passwordResetService.changePassword(any(NewPasswordDto.class))).thenReturn(success);
 
     mvc.perform(
-        post(EndpointConstants.ACCOUNTS_ENDPOINT + "/new-password")
+        post(EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password")
             .contentType(MediaType.APPLICATION_JSON)
             .content(jsonDto)
             .accept(MediaType.APPLICATION_JSON))
@@ -169,7 +168,7 @@ public class PasswordResetControllerTest {
         null);
 
     mvc.perform(
-        post(EndpointConstants.ACCOUNTS_ENDPOINT + "/new-password")
+        post(EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password")
             .contentType(MediaType.APPLICATION_JSON)
             .content(jsonDto)
             .accept(MediaType.APPLICATION_JSON))

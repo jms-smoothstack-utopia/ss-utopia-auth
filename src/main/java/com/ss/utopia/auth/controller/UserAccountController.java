@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @CrossOrigin
 @RestController
-@RequestMapping(EndpointConstants.ACCOUNTS_ENDPOINT)
+@RequestMapping(EndpointConstants.API_V_0_1_ACCOUNTS)
 public class UserAccountController {
 
   private final UserAccountService userAccountService;
@@ -39,7 +39,7 @@ public class UserAccountController {
     log.info("POST accounts");
     var userAccount = userAccountService.createNewAccount(createUserAccountDto);
     var userId = userAccount.getId();
-    var uri = URI.create(EndpointConstants.ACCOUNTS_ENDPOINT + "/" + userId);
+    var uri = URI.create(EndpointConstants.API_V_0_1_ACCOUNTS + "/" + userId);
     return ResponseEntity.created(uri).body(userId);
   }
 

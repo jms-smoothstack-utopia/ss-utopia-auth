@@ -2,8 +2,7 @@ package com.ss.utopia.auth.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ss.utopia.auth.controller.EndpointConstants;
-import java.util.Date;
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,27 +14,32 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+  private final SecurityConstants securityConstants;
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http
         .cors().and().csrf().disable()
         .authorizeRequests()
-        .antMatchers(HttpMethod.POST, EndpointConstants.ACCOUNTS_ENDPOINT).permitAll()
-        .antMatchers(HttpMethod.PUT, EndpointConstants.ACCOUNTS_ENDPOINT + "/confirm/**").permitAll()
-        .antMatchers(HttpMethod.POST, EndpointConstants.ACCOUNTS_ENDPOINT + "/password-reset").permitAll()
-        .antMatchers(HttpMethod.POST, EndpointConstants.ACCOUNTS_ENDPOINT + "/new-password").permitAll()
-        .antMatchers(HttpMethod.GET, EndpointConstants.ACCOUNTS_ENDPOINT + "/new-password/{token}").permitAll()
+        .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS).permitAll()
+        .antMatchers(HttpMethod.PUT, EndpointConstants.API_V_0_1_ACCOUNTS + "/confirm/**").permitAll()
+        .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS + "/password-reset").permitAll()
+        .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password").permitAll()
+        .antMatchers(HttpMethod.GET, EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password/{token}").permitAll()
         .antMatchers("/api-docs/**").permitAll()
+//        .antMatchers("/h2-console/**").permitAll()
         .anyRequest().authenticated()
         .and()
         .addFilter(new JwtAuthenticationFilter(authenticationManager(),
-                                               new ObjectMapper(), securityConstants()))
+                                               new ObjectMapper(), securityConstants))
         .addFilter(new JwtAuthenticationVerificationFilter(authenticationManager(),
-                                                           securityConstants()))
+                                                           securityConstants))
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
     ;
+//    http.headers().frameOptions().disable();
   }
 
   @Bean
@@ -44,32 +48,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     return super.authenticationManagerBean();
   }
 
-  @Bean
-  public SecurityConstants securityConstants() {
-    return SecurityConstants.INSTANCE;
-  }
 
-  @Data
-  public static class SecurityConstants {
-    //todo load all from env
 
-    private static final SecurityConstants INSTANCE = new SecurityConstants();
-
-    private final String authEndpoint = "/authenticate";
-    private final String jwtSecret = "superSecret";
-    private final String jwtHeaderName = "Authorization";
-    private final String jwtHeaderPrefix = "Bearer ";
-    private final String jwtIssuer = "ss-utopia";
-    //todo determine expiration time
-    private final long jwtExpirationDuration = 86_400_000; // 24 hours
-
-    //singleton that is only instantiated via parent
-    private SecurityConstants() {
-    }
-
-    public Date getExpiresAt() {
-      //todo possible concern with different timezones between services?
-      return new Date(System.currentTimeMillis() + jwtExpirationDuration);
-    }
-  }
 }
