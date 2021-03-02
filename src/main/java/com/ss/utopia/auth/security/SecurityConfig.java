@@ -28,6 +28,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .antMatchers(HttpMethod.POST, EndpointConstants.ACCOUNTS_ENDPOINT + "/new-password").permitAll()
         .antMatchers(HttpMethod.GET, EndpointConstants.ACCOUNTS_ENDPOINT + "/new-password/{token}").permitAll()
         .antMatchers("/api-docs/**").permitAll()
+//        .antMatchers("/h2-console/**").permitAll()
         .anyRequest().authenticated()
         .and()
         .addFilter(new JwtAuthenticationFilter(authenticationManager(),
@@ -36,6 +37,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                                                            securityConstants()))
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
     ;
+//    http.headers().frameOptions().disable();
   }
 
   @Bean
