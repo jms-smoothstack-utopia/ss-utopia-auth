@@ -61,13 +61,13 @@ class UserAccountControllerTest {
     var uuid = UUID.randomUUID();
 
     var headerName = "Location";
-    var expectedHeaderVal = EndpointConstants.ACCOUNTS_ENDPOINT + "/" + uuid;
+    var expectedHeaderVal = EndpointConstants.API_V_0_1_ACCOUNTS + "/" + uuid;
 
     when(service.createNewAccount(createDto))
         .thenReturn(UserAccount.builder().id(uuid).build());
 
     mvc.perform(
-        post(EndpointConstants.ACCOUNTS_ENDPOINT)
+        post(EndpointConstants.API_V_0_1_ACCOUNTS)
             .contentType(MediaType.APPLICATION_JSON_VALUE)
             .content(jsonDto))
         .andExpect(status().isCreated())
@@ -87,7 +87,7 @@ class UserAccountControllerTest {
     var jsonDto = jsonMapper.writeValueAsString(createDto);
 
     mvc.perform(
-        post(EndpointConstants.ACCOUNTS_ENDPOINT)
+        post(EndpointConstants.API_V_0_1_ACCOUNTS)
             .contentType(MediaType.APPLICATION_JSON_VALUE)
             .content(jsonDto))
         .andExpect(status().isConflict());
@@ -98,7 +98,7 @@ class UserAccountControllerTest {
     var uuid = UUID.randomUUID();
 
     mvc.perform(
-        put(EndpointConstants.ACCOUNTS_ENDPOINT + "/confirm/" + uuid))
+        put(EndpointConstants.API_V_0_1_ACCOUNTS + "/confirm/" + uuid))
         .andExpect(status().isNoContent());
   }
 
@@ -109,13 +109,13 @@ class UserAccountControllerTest {
         .confirmAccountRegistration(any(UUID.class));
 
     mvc.perform(
-        put(EndpointConstants.ACCOUNTS_ENDPOINT + "/confirm/" + UUID.randomUUID()))
+        put(EndpointConstants.API_V_0_1_ACCOUNTS + "/confirm/" + UUID.randomUUID()))
         .andExpect(status().isNotFound());
   }
   @Test
   void test_confirmAccountRegistration_ReturnsBadRequestOnInvalidToken() throws Exception{
     mvc.perform(
-        put(EndpointConstants.ACCOUNTS_ENDPOINT + "/confirm/1"))
+        put(EndpointConstants.API_V_0_1_ACCOUNTS + "/confirm/1"))
         .andExpect(status().isBadRequest());
   }
 }

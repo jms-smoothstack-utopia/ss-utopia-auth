@@ -25,16 +25,16 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
   private final AuthenticationManager authenticationManager;
   private final ObjectMapper objectMapper;
-  private final SecurityConfig.SecurityConstants securityConstants;
+  private final SecurityConstants securityConstants;
 
   public JwtAuthenticationFilter(AuthenticationManager authenticationManager,
                                  ObjectMapper objectMapper,
-                                 SecurityConfig.SecurityConstants securityConstants) {
+                                 SecurityConstants securityConstants) {
     super(authenticationManager);
     this.authenticationManager = authenticationManager;
     this.objectMapper = objectMapper;
     this.securityConstants = securityConstants;
-    setFilterProcessesUrl(securityConstants.getAuthEndpoint());
+    setFilterProcessesUrl(securityConstants.getEndpoint());
   }
 
   @Override

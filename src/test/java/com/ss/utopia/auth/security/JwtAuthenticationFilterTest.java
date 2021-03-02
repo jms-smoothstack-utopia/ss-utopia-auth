@@ -11,9 +11,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ss.utopia.auth.dto.AuthDto;
 import com.ss.utopia.auth.dto.AuthResponse;
-import com.ss.utopia.auth.security.SecurityConfig.SecurityConstants;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -36,7 +33,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 class JwtAuthenticationFilterTest {
 
-  static SecurityConstants mockSecurityConstants = Mockito.mock(SecurityConfig.SecurityConstants.class);
+  static SecurityConstants mockSecurityConstants = Mockito.mock(SecurityConstants.class);
 
   static Date mockJwtExpireDate = new Date(System.currentTimeMillis() + 1_000L);
 
@@ -50,7 +47,7 @@ class JwtAuthenticationFilterTest {
 
   @BeforeAll
   static void beforeAll() {
-    when(mockSecurityConstants.getAuthEndpoint()).thenReturn("/auth");
+    when(mockSecurityConstants.getEndpoint()).thenReturn("/auth");
     when(mockSecurityConstants.getJwtSecret()).thenReturn("SuperSecretJwt");
     when(mockSecurityConstants.getJwtHeaderName()).thenReturn("Authorization");
     when(mockSecurityConstants.getJwtHeaderPrefix()).thenReturn("Bearer ");
