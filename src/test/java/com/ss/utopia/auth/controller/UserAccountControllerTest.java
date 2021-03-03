@@ -1,9 +1,11 @@
 package com.ss.utopia.auth.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -11,11 +13,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ss.utopia.auth.dto.CreateUserAccountDto;
+import com.ss.utopia.auth.dto.NewPasswordDto;
+import com.ss.utopia.auth.dto.ResetPasswordDto;
 import com.ss.utopia.auth.entity.UserAccount;
 import com.ss.utopia.auth.exception.DuplicateEmailException;
+import com.ss.utopia.auth.exception.EmailNotSentException;
 import com.ss.utopia.auth.exception.NoSuchAccountActionToken;
+import com.ss.utopia.auth.exception.NoSuchUserAccountException;
 import com.ss.utopia.auth.repository.UserAccountRepository;
+import com.ss.utopia.auth.security.SecurityConstants;
+import com.ss.utopia.auth.service.PasswordResetService;
 import com.ss.utopia.auth.service.UserAccountService;
+import java.util.Date;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,12 +49,24 @@ class UserAccountControllerTest {
   @MockBean
   UserAccountRepository repository;
   @MockBean
-  UserAccountService service;
+  UserAccountService userAccountService;
+
+  @MockBean
+  PasswordResetService passwordResetService;
+
+  @MockBean
+  SecurityConstants securityConstants;
 
   private MockMvc mvc;
 
   @BeforeEach
   void beforeEach() {
+    when(securityConstants.getJwtHeaderName()).thenReturn("Authorization");
+    when(securityConstants.getJwtHeaderPrefix()).thenReturn("Bearer ");
+    when(securityConstants.getJwtSecret()).thenReturn("superSecret");
+    when(securityConstants.getJwtIssuer()).thenReturn("ss-utopia");
+    when(securityConstants.getExpiresAt()).thenReturn(new Date());
+    when(securityConstants.getJwtExpirationDuration()).thenReturn(100L);
     mvc = MockMvcBuilders
         .webAppContextSetup(wac)
         .apply(springSecurity())
@@ -63,7 +86,7 @@ class UserAccountControllerTest {
     var headerName = "Location";
     var expectedHeaderVal = EndpointConstants.API_V_0_1_ACCOUNTS + "/" + uuid;
 
-    when(service.createNewAccount(createDto))
+    when(userAccountService.createNewAccount(createDto))
         .thenReturn(UserAccount.builder().id(uuid).build());
 
     mvc.perform(
@@ -81,7 +104,7 @@ class UserAccountControllerTest {
         .password("abCD1234!@")
         .build();
 
-    when(service.createNewAccount(createDto))
+    when(userAccountService.createNewAccount(createDto))
         .thenThrow(new DuplicateEmailException("test2@test.com"));
 
     var jsonDto = jsonMapper.writeValueAsString(createDto);
@@ -105,17 +128,142 @@ class UserAccountControllerTest {
   @Test
   void test_confirmAccountRegistration_ReturnsNotFoundOnTokenNotFound() throws Exception {
     doThrow(NoSuchAccountActionToken.class)
-        .when(service)
+        .when(userAccountService)
         .confirmAccountRegistration(any(UUID.class));
 
     mvc.perform(
         put(EndpointConstants.API_V_0_1_ACCOUNTS + "/confirm/" + UUID.randomUUID()))
         .andExpect(status().isNotFound());
   }
+
   @Test
-  void test_confirmAccountRegistration_ReturnsBadRequestOnInvalidToken() throws Exception{
+  void test_confirmAccountRegistration_ReturnsBadRequestOnInvalidToken() throws Exception {
     mvc.perform(
         put(EndpointConstants.API_V_0_1_ACCOUNTS + "/confirm/1"))
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void test_addPasswordReset_StatusIs200MeaningEntryCreatedAndEmailSent() throws Exception {
+    ResetPasswordDto resetPasswordDto = ResetPasswordDto.builder()
+        .email("test@test.com")
+        .build();
+
+    String jsonDto = jsonMapper.writeValueAsString(resetPasswordDto);
+    String token = UUID.randomUUID().toString();
+
+    when(passwordResetService.addPasswordReset(any(ResetPasswordDto.class))).thenReturn(token);
+
+    mvc.perform(
+        post(EndpointConstants.API_V_0_1_ACCOUNTS + "/password-reset")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(jsonDto))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void test_addPasswordReset_StatusIs404MeaningEmailDoesNotExistInUserAccounts() throws Exception {
+    ResetPasswordDto resetPasswordDto = ResetPasswordDto.builder()
+        .email("doesnotexist@email.com")
+        .build();
+
+    String jsonDto = jsonMapper.writeValueAsString(resetPasswordDto);
+
+    doThrow(NoSuchUserAccountException.class)
+        .when(passwordResetService)
+        .addPasswordReset(any(ResetPasswordDto.class));
+
+    mvc.perform(
+        post(EndpointConstants.API_V_0_1_ACCOUNTS + "/password-reset")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(jsonDto))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void test_addPasswordReset_StatusIs500MeaningEmailWasNotSent() throws Exception {
+    ResetPasswordDto resetPasswordDto = ResetPasswordDto.builder()
+        .email("test@email.com")
+        .build();
+
+    String jsonDto = jsonMapper.writeValueAsString(resetPasswordDto);
+
+    when(passwordResetService.addPasswordReset(any(resetPasswordDto.getClass())))
+        .thenThrow(new EmailNotSentException());
+
+    mvc.perform(
+        post(EndpointConstants.API_V_0_1_ACCOUNTS + "/password-reset")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(jsonDto))
+        .andExpect(status().is5xxServerError());
+  }
+
+  @Test
+  void test_tokenCheck_StatusIs200MeaningTokenIsValid() throws Exception {
+
+    String token = UUID.randomUUID().toString();
+
+    when(passwordResetService.tokenCheck(token)).thenReturn(Boolean.TRUE);
+
+    mvc.perform(
+        get(EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password/" + token)
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void test_tokenCheck_StatusIs404MeaningTokenIsNotValid() throws Exception {
+
+    String token = UUID.randomUUID().toString();
+
+    when(passwordResetService.tokenCheck(token)).thenReturn(Boolean.FALSE);
+
+    mvc.perform(
+        get(EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password/" + token)
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void test_changePassword_StatusIs200MeaningPasswordChanged() throws Exception {
+
+    String token = UUID.randomUUID().toString();
+
+    NewPasswordDto newPasswordDto = new NewPasswordDto();
+    newPasswordDto.setToken(token);
+    newPasswordDto.setPassword("Qwerty123456!");
+
+    String jsonDto = jsonMapper.writeValueAsString(newPasswordDto);
+
+    Map<String, String> success = Map.of("message", "Password reset successful");
+
+    mvc.perform(
+        post(EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(jsonDto)
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void test_changePassword_StatusIs404MeaningTokenWasInvalid() throws Exception {
+
+    String token = UUID.randomUUID().toString();
+
+    NewPasswordDto newPasswordDto = new NewPasswordDto();
+    newPasswordDto.setToken(token);
+    newPasswordDto.setPassword("Qwerty123456!");
+
+    String jsonDto = jsonMapper.writeValueAsString(newPasswordDto);
+
+    doThrow(new NoSuchElementException())
+        .when(passwordResetService).changePassword(any(NewPasswordDto.class));
+
+    mvc.perform(
+        post(EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(jsonDto)
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound());
   }
 }

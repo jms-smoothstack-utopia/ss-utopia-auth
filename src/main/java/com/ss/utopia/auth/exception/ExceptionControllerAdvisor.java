@@ -50,12 +50,34 @@ public class ExceptionControllerAdvisor {
   @ResponseStatus(HttpStatus.NOT_FOUND)
   @ExceptionHandler(NoSuchElementException.class)
   public Map<String, Object> handleNoSuchElementException(NoSuchElementException ex) {
-    log.error((ex.getMessage()));
+    log.error(ex.getMessage());
 
     var response = new HashMap<String, Object>();
     response.put("error", ex.getMessage());
     response.put("status", HttpStatus.BAD_REQUEST.value());
 
+    return response;
+  }
+
+  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+  @ExceptionHandler(EmailNotSentException.class)
+  public Map<String, Object> handleEmailNotSentException(EmailNotSentException ex) {
+    log.error(ex.getMessage());
+
+    var response = new HashMap<String, Object>();
+    response.put("error", "Unable to send email. Please try again.");
+    response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    return response;
+  }
+
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ExceptionHandler(InvalidTokenException.class)
+  public Map<String, Object> handleInvalidTokenException(InvalidTokenException ex) {
+    log.error(ex.getMessage());
+
+    var response = new HashMap<String, Object>();
+    response.put("error", ex.getMessage());
+    response.put("status", HttpStatus.BAD_REQUEST.value());
     return response;
   }
 
