@@ -38,6 +38,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     var authEndpoint = securityConstants.getEndpoint();
     if (authEndpoint == null || authEndpoint.isBlank()) {
       authEndpoint = "/authenticate";
+      log.warn("Authentication endpoint is null. Setting default endpoint of '/authenticate'");
     }
 
     setFilterProcessesUrl(authEndpoint);
@@ -80,7 +81,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     var jwt = JWT.create()
         .withSubject(email)
         .withIssuer(securityConstants.getJwtIssuer())
-        .withClaim("Authorities", authorities)
+        .withClaim(securityConstants.getAuthorityClaimKey(), authorities)
         .withExpiresAt(expiresAt)
         .sign(Algorithm.HMAC512(securityConstants.getJwtSecret()));
 

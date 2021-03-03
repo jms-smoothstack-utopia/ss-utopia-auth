@@ -24,7 +24,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     http
         .cors().and().csrf().disable()
         .authorizeRequests()
-        .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS).permitAll()
+        .antMatchers(HttpMethod.POST, securityConstants.getEndpoint()).permitAll()
         .antMatchers(HttpMethod.PUT, EndpointConstants.API_V_0_1_ACCOUNTS + "/confirm/**").permitAll()
         .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS + "/password-reset").permitAll()
         .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password").permitAll()
@@ -47,7 +47,4 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   public AuthenticationManager authenticationManagerBean() throws Exception {
     return super.authenticationManagerBean();
   }
-
-
-
 }
