@@ -1,10 +1,14 @@
 package com.ss.utopia.auth.controller;
 
 import com.ss.utopia.auth.dto.CreateUserAccountDto;
+import com.ss.utopia.auth.dto.NewPasswordDto;
+import com.ss.utopia.auth.dto.ResetPasswordDto;
+import com.ss.utopia.auth.service.PasswordResetService;
 import com.ss.utopia.auth.service.UserAccountService;
 import java.net.URI;
 import java.util.UUID;
 import javax.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,13 +25,11 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin
 @RestController
 @RequestMapping(EndpointConstants.API_V_0_1_ACCOUNTS)
+@RequiredArgsConstructor
 public class UserAccountController {
 
   private final UserAccountService userAccountService;
-
-  public UserAccountController(UserAccountService userAccountService) {
-    this.userAccountService = userAccountService;
-  }
+  private final PasswordResetService passwordResetService;
 
   @GetMapping("/test")
   public ResponseEntity<String> testEndpoint() {
@@ -47,5 +49,31 @@ public class UserAccountController {
   public ResponseEntity<?> confirmAccountRegistration(@PathVariable UUID confirmationTokenId) {
     userAccountService.confirmAccountRegistration(confirmationTokenId);
     return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping(value = "/password-reset",
+      consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity<?> addPasswordReset(@Valid @RequestBody ResetPasswordDto resetPasswordDto) {
+    var token = passwordResetService.addPasswordReset(resetPasswordDto);
+    return ResponseEntity.ok().build();
+  }
+
+  @GetMapping(value = "/new-password/{token}",
+      produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity<?> tokenCheck(@PathVariable String token) {
+    log.info("Checking token: " + token);
+    if (passwordResetService.tokenCheck(token)) {
+      return ResponseEntity.ok().build();
+    }
+    return ResponseEntity.notFound().build();
+  }
+
+  @PostMapping(value = "/new-password",
+      consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
+      produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity<?> changePassword(@Valid @RequestBody NewPasswordDto newPasswordDto) {
+    log.info("Updating password initiated");
+    passwordResetService.changePassword(newPasswordDto);
+    return ResponseEntity.ok().build();
   }
 }

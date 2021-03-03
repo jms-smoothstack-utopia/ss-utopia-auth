@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public interface EmailClient {
 
-  ResponseEntity<String> sendForgetPasswordEmail(String token, String email);
+  void sendForgetPasswordEmail(String token, String email);
 
   void sendConfirmAccountEmail(String recipient, UUID confirmationToken);
 }

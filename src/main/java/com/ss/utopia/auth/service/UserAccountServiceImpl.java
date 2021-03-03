@@ -89,6 +89,12 @@ public class UserAccountServiceImpl implements UserAccountService {
         });
   }
 
+  @Override
+  public void updateAccount(UserAccount userAccount) {
+    userAccountRepository.findById(userAccount.getId())
+        .ifPresent(a -> userAccountRepository.save(userAccount));
+  }
+
   private void validateDto(CreateUserAccountDto dto) {
     var violations = validator.validate(dto);
 

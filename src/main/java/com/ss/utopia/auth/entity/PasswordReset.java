@@ -35,5 +35,6 @@ public class PasswordReset {
   @Basic
   private Timestamp timestamp;
 
+  @Builder.Default
   private boolean isActive = true;
 }

@@ -1,7 +1,8 @@
 package com.ss.utopia.auth.client;
 
+import com.ss.utopia.auth.client.email.AbstractUrlEmail;
 import com.ss.utopia.auth.client.email.AccountConfirmationEmail;
-import com.ss.utopia.auth.dto.EmailDto;
+import com.ss.utopia.auth.client.email.PasswordResetEmail;
 import com.ss.utopia.auth.exception.EmailNotSentException;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
@@ -21,10 +22,10 @@ import org.springframework.web.client.RestTemplate;
 @ConfigurationProperties(value = "com.ss.utopia.email", ignoreUnknownFields = false)
 public class RestTemplateEmailClient implements EmailClient {
 
-  private final String endpoint = "/beta";
-
   @Setter
-  private String apiHost;
+  private String sesEndpoint;
+  @Setter
+  private String passwordResetBaseUrl;
   @Setter
   private String confirmationBaseUrl;
 
@@ -41,42 +42,30 @@ public class RestTemplateEmailClient implements EmailClient {
     restTemplate = builder.build();
   }
 
-
   @Override
-  public ResponseEntity<String> sendForgetPasswordEmail(String token, String email) {
-    //String mailUrl = apiHost + endpoint;
+  public void sendForgetPasswordEmail(String token, String recipientEmail) {
+    var resetPasswordUrl = passwordResetBaseUrl + "/" + token;
 
-    String mailUrl = "https://c0uenga9m6.execute-api.us-east-1.amazonaws.com/beta";
+    var email = new PasswordResetEmail(recipientEmail, resetPasswordUrl);
+    var response = restTemplate.postForEntity(sesEndpoint, email, String.class);
 
-    //Set email Dto
-    EmailDto emailToSend = new EmailDto();
-    emailToSend.setEmail(email);
-    emailToSend.setSubject("Reset Utopia password");
-    String customerUrl = "http://localhost:4200/login/password/resetform/" + token;
-    String content =
-        "<h1>Utopia Password Change</h1>" +
-            "<span>Please use this link to change your password (Link will expire in one day) </span>"
-            +
-            "<h2><a href='" + customerUrl + "'>Change password</a></h2>" +
-            "<h3><span>Thanks</span></h3>" +
-            "<h3>The Utopia team</h3>";
-    emailToSend.setContent(content);
-
-    //Send response
-    return restTemplate.postForEntity(mailUrl, emailToSend, String.class);
+    handleResponse(response, email);
   }
 
   @Override
   public void sendConfirmAccountEmail(String recipientEmail, UUID confirmationToken) {
-    var postToUrl = apiHost + endpoint;
-
     var confirmationUrl = confirmationBaseUrl + "/" + confirmationToken;
 
     var email = new AccountConfirmationEmail(recipientEmail, confirmationUrl);
-    var response = restTemplate.postForEntity(postToUrl, email, String.class);
+    var response = restTemplate.postForEntity(sesEndpoint, email, String.class);
 
+    handleResponse(response, email);
+  }
+
+  private void handleResponse(ResponseEntity<String> response, AbstractUrlEmail email) {
     if (response.getStatusCode().is2xxSuccessful()) {
-      log.info("Account creation confirmation email sent to: " + recipientEmail);
+      log.debug("Email sent to: " + email.getRecipient());
+      log.debug(email.getSubject());
     } else {
       //todo retry if possible
       log.error("Unable to send confirmation email.");

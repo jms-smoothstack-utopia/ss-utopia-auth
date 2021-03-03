@@ -34,7 +34,13 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     this.authenticationManager = authenticationManager;
     this.objectMapper = objectMapper;
     this.securityConstants = securityConstants;
-    setFilterProcessesUrl(securityConstants.getEndpoint());
+
+    var authEndpoint = securityConstants.getEndpoint();
+    if (authEndpoint == null || authEndpoint.isBlank()) {
+      authEndpoint = "/authenticate";
+    }
+
+    setFilterProcessesUrl(authEndpoint);
   }
 
   @Override
