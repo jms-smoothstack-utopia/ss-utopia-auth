@@ -2,9 +2,11 @@ package com.ss.utopia.auth.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ss.utopia.auth.controller.EndpointConstants;
+import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,10 +19,17 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 @RequiredArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
+  private final Environment environment;
   private final SecurityConstants securityConstants;
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
+    // enable h2 console if using that profile
+    if (Arrays.asList(environment.getActiveProfiles()).contains("local-h2")) {
+      http.authorizeRequests().antMatchers("/h2-console/**").permitAll();
+      http.headers().frameOptions().disable();
+    }
+
     http
         .cors().and().csrf().disable()
         .authorizeRequests()
@@ -30,7 +39,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password").permitAll()
         .antMatchers(HttpMethod.GET, EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password/{token}").permitAll()
         .antMatchers("/api-docs/**").permitAll()
-//        .antMatchers("/h2-console/**").permitAll()
         .anyRequest().authenticated()
         .and()
         .addFilter(new JwtAuthenticationFilter(authenticationManager(),
@@ -39,7 +47,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                                                            securityConstants))
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
     ;
-//    http.headers().frameOptions().disable();
   }
 
   @Bean
