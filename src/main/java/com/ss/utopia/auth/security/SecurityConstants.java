@@ -18,6 +18,7 @@ public class SecurityConstants {
   private String jwtIssuer;
   private long jwtExpirationDuration;
   private String authorityClaimKey;
+  private String userIdClaimKey;
 
   public void setJwtExpirationDuration(String jwtExpirationDuration) {
     this.jwtExpirationDuration = Long.parseLong(jwtExpirationDuration.replaceAll("_", ""));

@@ -69,6 +69,11 @@ public class JwtAuthenticationVerificationFilter extends BasicAuthenticationFilt
         .map(SimpleGrantedAuthority::new)
         .collect(Collectors.toList());
 
-    return new UsernamePasswordAuthenticationToken(subject, null, authorities);
+    var userId = jwt.getClaim(securityConstants.getUserIdClaimKey()).asString();
+
+    var authenticationToken = new UsernamePasswordAuthenticationToken(subject, null, authorities);
+    authenticationToken.setDetails(userId);
+
+    return authenticationToken;
   }
 }

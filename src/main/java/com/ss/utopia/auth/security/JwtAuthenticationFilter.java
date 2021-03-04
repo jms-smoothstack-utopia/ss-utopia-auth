@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ss.utopia.auth.dto.AuthDto;
 import com.ss.utopia.auth.dto.AuthResponse;
+import com.ss.utopia.auth.entity.UserAccount;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -70,8 +71,10 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                           Authentication authResult) throws IOException {
     log.debug("Successful authentication.");
 
-    var email = authResult.getName();
-    var authorities = authResult.getAuthorities()
+    var user = (UserAccount) authResult.getPrincipal();
+    var id = user.getId();
+    var email = user.getEmail();
+    var authorities = user.getAuthorities()
         .stream()
         .map(GrantedAuthority::getAuthority)
         .collect(Collectors.toList());
@@ -81,6 +84,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     var jwt = JWT.create()
         .withSubject(email)
         .withIssuer(securityConstants.getJwtIssuer())
+        .withClaim(securityConstants.getUserIdClaimKey(), id.toString())
         .withClaim(securityConstants.getAuthorityClaimKey(), authorities)
         .withExpiresAt(expiresAt)
         .sign(Algorithm.HMAC512(securityConstants.getJwtSecret()));

@@ -73,7 +73,7 @@ public class UserAccount implements UserDetails {
     if (userRole == null) {
       return Collections.emptySet();
     }
-    return Set.of(new SimpleGrantedAuthority(userRole.getRoleName()));
+    return Set.of(new SimpleGrantedAuthority(userRole.getRole()));
   }
 
   @Override
