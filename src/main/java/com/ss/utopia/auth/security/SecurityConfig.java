@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ss.utopia.auth.controller.EndpointConstants;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -14,6 +15,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -30,10 +32,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
       http.headers().frameOptions().disable();
     }
 
+    // fixme: this is duplicated across a few places due to a weird bug with mocking during tests.
+    var authEndpoint = securityConstants.getEndpoint();
+    if (authEndpoint == null || authEndpoint.isEmpty() || authEndpoint.isBlank()) {
+      authEndpoint = "/authenticate";
+      log.warn("Authentication endpoint is null. Setting default endpoint of '/authenticate'");
+    }
+
     http
         .cors().and().csrf().disable()
         .authorizeRequests()
-        .antMatchers(HttpMethod.POST, securityConstants.getEndpoint()).permitAll()
+        .antMatchers(HttpMethod.POST, authEndpoint).permitAll()
+        .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS).permitAll()
         .antMatchers(HttpMethod.PUT, EndpointConstants.API_V_0_1_ACCOUNTS + "/confirm/**").permitAll()
         .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS + "/password-reset").permitAll()
         .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password").permitAll()

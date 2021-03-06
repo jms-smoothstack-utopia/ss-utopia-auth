@@ -11,12 +11,16 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ss.utopia.auth.dto.AuthDto;
 import com.ss.utopia.auth.dto.AuthResponse;
+import com.ss.utopia.auth.entity.UserAccount;
+import com.ss.utopia.auth.entity.UserRole;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -47,12 +51,14 @@ class JwtAuthenticationFilterTest {
 
   @BeforeAll
   static void beforeAll() {
-    when(mockSecurityConstants.getEndpoint()).thenReturn("/auth");
-    when(mockSecurityConstants.getJwtSecret()).thenReturn("SuperSecretJwt");
+    when(mockSecurityConstants.getEndpoint()).thenReturn("/authenticate");
+    when(mockSecurityConstants.getJwtSecret()).thenReturn("superSecret");
     when(mockSecurityConstants.getJwtHeaderName()).thenReturn("Authorization");
     when(mockSecurityConstants.getJwtHeaderPrefix()).thenReturn("Bearer ");
-    when(mockSecurityConstants.getJwtIssuer()).thenReturn("test-issuer");
-    when(mockSecurityConstants.getJwtExpirationDuration()).thenReturn(1_000L);
+    when(mockSecurityConstants.getJwtIssuer()).thenReturn("ss-utopia");
+    when(mockSecurityConstants.getJwtExpirationDuration()).thenReturn(100L);
+    when(mockSecurityConstants.getAuthorityClaimKey()).thenReturn("Authorities");
+    when(mockSecurityConstants.getUserIdClaimKey()).thenReturn("userId");
     when(mockSecurityConstants.getExpiresAt()).thenReturn(mockJwtExpireDate);
   }
 
@@ -143,17 +149,28 @@ class JwtAuthenticationFilterTest {
     var mockAuthResult = Mockito.mock(Authentication.class);
     var mockAuthDto = AuthDto.builder().email("test@test.com").password("abCD1234!@").build();
 
+    var mockUserAccount = UserAccount.builder()
+        .id(UUID.randomUUID())
+        .email(mockAuthDto.getEmail())
+        .password("some password")
+        .userRole(UserRole.DEFAULT)
+        .build();
+
     when(mockAuthResult.getName()).thenReturn(mockAuthDto.getEmail());
 
-    GrantedAuthority mockAuthority = () -> "MOCK AUTHORITY";
-    doReturn(List.of(mockAuthority)).when(mockAuthResult).getAuthorities();
-    // sanity
-    assertEquals(List.of(mockAuthority), mockAuthResult.getAuthorities());
+
+    when(mockAuthResult.getPrincipal()).thenReturn(mockUserAccount);
+
+    var mockAuthorities = mockUserAccount.getAuthorities()
+        .stream()
+        .map(GrantedAuthority::getAuthority)
+        .collect(Collectors.toList());
 
     var expectedJwt = JWT.create()
         .withSubject(mockAuthDto.getEmail())
         .withIssuer(mockSecurityConstants.getJwtIssuer())
-        .withClaim("Authorities", List.of(mockAuthority.getAuthority()))
+        .withClaim(mockSecurityConstants.getUserIdClaimKey(), mockUserAccount.getId().toString())
+        .withClaim(mockSecurityConstants.getAuthorityClaimKey(), mockAuthorities)
         .withExpiresAt(mockJwtExpireDate)
         .sign(Algorithm.HMAC512(mockSecurityConstants.getJwtSecret()));
 

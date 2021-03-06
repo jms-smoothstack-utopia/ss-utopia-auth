@@ -12,6 +12,13 @@ import org.springframework.context.annotation.Configuration;
 public class SecurityConstants {
 
   private String endpoint;
+  public String getEndpoint() {
+    if (endpoint == null || endpoint.isEmpty() || endpoint.isBlank()) {
+      return "/authenticate";
+    }
+    return endpoint;
+  }
+
   private String jwtSecret;
   private String jwtHeaderName;
   private String jwtHeaderPrefix;
