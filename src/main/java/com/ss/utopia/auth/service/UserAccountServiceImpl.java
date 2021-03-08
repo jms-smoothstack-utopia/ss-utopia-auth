@@ -5,6 +5,7 @@ import com.ss.utopia.auth.dto.CreateUserAccountDto;
 import com.ss.utopia.auth.entity.AccountAction;
 import com.ss.utopia.auth.entity.AccountActionToken;
 import com.ss.utopia.auth.entity.UserAccount;
+import com.ss.utopia.auth.entity.UserRole;
 import com.ss.utopia.auth.exception.DuplicateEmailException;
 import com.ss.utopia.auth.exception.EmailNotSentException;
 import com.ss.utopia.auth.exception.NoSuchAccountActionToken;
@@ -83,6 +84,10 @@ public class UserAccountServiceImpl implements UserAccountService {
         .ifPresentOrElse(token -> {
           var account = getById(token.getOwnerAccountId());
           account.setConfirmed(true);
+          // don't modify non-customer accounts with confirmation
+          if (account.getUserRole().equals(UserRole.DEFAULT)) {
+            account.setUserRole(UserRole.CUSTOMER);
+          }
           userAccountRepository.save(account);
         }, () -> {
           throw new NoSuchAccountActionToken(confirmationTokenId);

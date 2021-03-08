@@ -1,6 +1,5 @@
 package com.ss.utopia.auth.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -28,8 +27,10 @@ import java.util.Date;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -61,12 +62,16 @@ class UserAccountControllerTest {
 
   @BeforeEach
   void beforeEach() {
+    when(securityConstants.getEndpoint()).thenReturn("/authenticate");
+    when(securityConstants.getJwtSecret()).thenReturn("superSecret");
     when(securityConstants.getJwtHeaderName()).thenReturn("Authorization");
     when(securityConstants.getJwtHeaderPrefix()).thenReturn("Bearer ");
-    when(securityConstants.getJwtSecret()).thenReturn("superSecret");
     when(securityConstants.getJwtIssuer()).thenReturn("ss-utopia");
-    when(securityConstants.getExpiresAt()).thenReturn(new Date());
     when(securityConstants.getJwtExpirationDuration()).thenReturn(100L);
+    when(securityConstants.getAuthorityClaimKey()).thenReturn("Authorities");
+    when(securityConstants.getUserIdClaimKey()).thenReturn("userId");
+    when(securityConstants.getExpiresAt()).thenReturn(new Date());
+
     mvc = MockMvcBuilders
         .webAppContextSetup(wac)
         .apply(springSecurity())

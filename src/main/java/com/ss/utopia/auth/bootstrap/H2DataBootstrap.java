@@ -6,6 +6,7 @@ import com.ss.utopia.auth.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,10 +15,13 @@ import org.springframework.stereotype.Component;
 public class H2DataBootstrap implements CommandLineRunner {
 
   private final UserAccountRepository userAccountRepository;
+  private final BCryptPasswordEncoder bCryptPasswordEncoder;
+  private String encodedPassword;
 
   @Override
   public void run(String... args) {
     if (userAccountRepository.count() == 0) {
+      encodedPassword = bCryptPasswordEncoder.encode("test");
       loadAllTestAccounts();
     }
   }
@@ -33,7 +37,7 @@ public class H2DataBootstrap implements CommandLineRunner {
   private void loadDefaultUser() {
     var user = UserAccount.builder()
         .email("default@test.com")
-        .password("test")
+        .password(encodedPassword)
         .userRole(UserRole.DEFAULT)
         .build();
     userAccountRepository.save(user);
@@ -42,7 +46,7 @@ public class H2DataBootstrap implements CommandLineRunner {
   private void loadCustomerUser() {
     var user = UserAccount.builder()
         .email("customer@test.com")
-        .password("test")
+        .password(encodedPassword)
         .userRole(UserRole.CUSTOMER)
         .confirmed(true)
         .build();
@@ -52,7 +56,7 @@ public class H2DataBootstrap implements CommandLineRunner {
   private void loadTravelAgentUser() {
     var user = UserAccount.builder()
         .email("travel_agent@test.com")
-        .password("test")
+        .password(encodedPassword)
         .userRole(UserRole.TRAVEL_AGENT)
         .confirmed(true)
         .build();
@@ -62,7 +66,7 @@ public class H2DataBootstrap implements CommandLineRunner {
   private void loadEmployeeUser() {
     var user = UserAccount.builder()
         .email("employee@test.com")
-        .password("test")
+        .password(encodedPassword)
         .userRole(UserRole.EMPLOYEE)
         .confirmed(true)
         .build();
@@ -72,7 +76,7 @@ public class H2DataBootstrap implements CommandLineRunner {
   private void loadAdminUser() {
     var user = UserAccount.builder()
         .email("admin@test.com")
-        .password("test")
+        .password(encodedPassword)
         .userRole(UserRole.ADMIN)
         .confirmed(true)
         .build();

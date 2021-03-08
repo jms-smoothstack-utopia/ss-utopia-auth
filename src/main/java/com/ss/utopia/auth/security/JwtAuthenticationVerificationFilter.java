@@ -4,7 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import java.io.IOException;
-import java.util.Collections;
+import java.util.stream.Collectors;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.stereotype.Component;
@@ -48,17 +49,31 @@ public class JwtAuthenticationVerificationFilter extends BasicAuthenticationFilt
 
   private UsernamePasswordAuthenticationToken getAuthenticationToken(HttpServletRequest request) {
     var token = request.getHeader(securityConstants.getJwtHeaderName());
-    if (token != null) {
-      //todo get roles from jwt?
-      var subject = JWT.require(Algorithm.HMAC512(securityConstants.getJwtSecret()))
-          .build()
-          .verify(token.replace(securityConstants.getJwtHeaderPrefix(), ""))
-          .getSubject();
-      if (subject != null) {
-        return new UsernamePasswordAuthenticationToken(subject, null, Collections.emptySet());
-      }
+    if (token == null) {
+      return null;
     }
-    return null;
-  }
 
+    var jwt = JWT.require(Algorithm.HMAC512(securityConstants.getJwtSecret()))
+        .build()
+        .verify(token.replace(securityConstants.getJwtHeaderPrefix(), ""));
+
+    var subject = jwt.getSubject();
+
+    if (subject == null) {
+      return null;
+    }
+
+    var authorities = jwt.getClaim(securityConstants.getAuthorityClaimKey())
+        .asList(String.class)
+        .stream()
+        .map(SimpleGrantedAuthority::new)
+        .collect(Collectors.toList());
+
+    var userId = jwt.getClaim(securityConstants.getUserIdClaimKey()).asString();
+
+    var authenticationToken = new UsernamePasswordAuthenticationToken(subject, null, authorities);
+    authenticationToken.setDetails(userId);
+
+    return authenticationToken;
+  }
 }

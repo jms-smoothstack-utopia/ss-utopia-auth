@@ -2,6 +2,7 @@ package com.ss.utopia.auth.security;
 
 import java.util.Date;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,11 +12,20 @@ import org.springframework.context.annotation.Configuration;
 public class SecurityConstants {
 
   private String endpoint;
+  public String getEndpoint() {
+    if (endpoint == null || endpoint.isEmpty() || endpoint.isBlank()) {
+      return "/login";
+    }
+    return endpoint;
+  }
+
   private String jwtSecret;
   private String jwtHeaderName;
   private String jwtHeaderPrefix;
   private String jwtIssuer;
   private long jwtExpirationDuration;
+  private String authorityClaimKey;
+  private String userIdClaimKey;
 
   public void setJwtExpirationDuration(String jwtExpirationDuration) {
     this.jwtExpirationDuration = Long.parseLong(jwtExpirationDuration.replaceAll("_", ""));

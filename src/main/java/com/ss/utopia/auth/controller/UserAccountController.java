@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
-@CrossOrigin
 @RestController
 @RequestMapping(EndpointConstants.API_V_0_1_ACCOUNTS)
 @RequiredArgsConstructor
