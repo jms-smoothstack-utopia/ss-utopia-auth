@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.web.cors.CorsUtils;
 
 @Slf4j
 @Configuration
@@ -35,13 +36,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     // fixme: this is duplicated across a few places due to a weird bug with mocking during tests.
     var authEndpoint = securityConstants.getEndpoint();
     if (authEndpoint == null || authEndpoint.isEmpty() || authEndpoint.isBlank()) {
-      authEndpoint = "/authenticate";
-      log.warn("Authentication endpoint is null. Setting default endpoint of '/authenticate'");
+      authEndpoint = "/login";
+      log.warn("Authentication endpoint is null. Setting default endpoint of '/login'");
     }
 
     http
         .cors().and().csrf().disable()
         .authorizeRequests()
+        .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
+        .requestMatchers(CorsUtils::isCorsRequest).permitAll()
         .antMatchers(HttpMethod.POST, authEndpoint).permitAll()
         .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS).permitAll()
         .antMatchers(HttpMethod.PUT, EndpointConstants.API_V_0_1_ACCOUNTS + "/confirm/**").permitAll()

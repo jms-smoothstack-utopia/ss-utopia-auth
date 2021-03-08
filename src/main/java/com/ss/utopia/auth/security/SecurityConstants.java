@@ -14,7 +14,7 @@ public class SecurityConstants {
   private String endpoint;
   public String getEndpoint() {
     if (endpoint == null || endpoint.isEmpty() || endpoint.isBlank()) {
-      return "/authenticate";
+      return "/login";
     }
     return endpoint;
   }

@@ -38,8 +38,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     var authEndpoint = securityConstants.getEndpoint();
     if (authEndpoint == null || authEndpoint.isBlank()) {
-      authEndpoint = "/authenticate";
-      log.warn("Authentication endpoint is null. Setting default endpoint of '/authenticate'");
+      authEndpoint = "/login";
+      log.warn("Authentication endpoint is null. Setting default endpoint of '/login'");
     }
 
     setFilterProcessesUrl(authEndpoint);
