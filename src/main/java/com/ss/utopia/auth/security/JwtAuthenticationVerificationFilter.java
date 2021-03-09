@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import java.io.IOException;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -71,9 +72,11 @@ public class JwtAuthenticationVerificationFilter extends BasicAuthenticationFilt
 
     var userId = jwt.getClaim(securityConstants.getUserIdClaimKey()).asString();
 
-    var authenticationToken = new UsernamePasswordAuthenticationToken(subject, null, authorities);
-    authenticationToken.setDetails(userId);
+    var jwtPrincipal = JwtPrincipal.builder()
+        .email(subject)
+        .userId(UUID.fromString(userId))
+        .build();
 
-    return authenticationToken;
+    return new UsernamePasswordAuthenticationToken(jwtPrincipal, null, authorities);
   }
 }
