@@ -1,18 +1,23 @@
 package com.ss.utopia.auth.controller;
 
 import com.ss.utopia.auth.dto.CreateUserAccountDto;
+import com.ss.utopia.auth.dto.DeleteAccountDto;
 import com.ss.utopia.auth.dto.NewPasswordDto;
 import com.ss.utopia.auth.dto.ResetPasswordDto;
+import com.ss.utopia.auth.entity.UserAccount;
+import com.ss.utopia.auth.security.permissions.AdminOnlyPermission;
+import com.ss.utopia.auth.security.permissions.ServiceOnlyPermission;
 import com.ss.utopia.auth.service.PasswordResetService;
 import com.ss.utopia.auth.service.UserAccountService;
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,6 +38,16 @@ public class UserAccountController {
   @GetMapping("/test")
   public ResponseEntity<String> testEndpoint() {
     return ResponseEntity.ok("{\"msg\":\"You are authenticated.\"}");
+  }
+
+  @AdminOnlyPermission
+  @GetMapping(produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity<List<UserAccount>> getAllAccounts() {
+    var accounts = userAccountService.getAll();
+    if (accounts.isEmpty()) {
+      return ResponseEntity.noContent().build();
+    }
+    return ResponseEntity.ok(accounts);
   }
 
   @PostMapping(consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
@@ -74,5 +89,26 @@ public class UserAccountController {
     log.info("Updating password initiated");
     passwordResetService.changePassword(newPasswordDto);
     return ResponseEntity.ok().build();
+  }
+
+  @AdminOnlyPermission
+  @DeleteMapping("/{accountId}")
+  public ResponseEntity<?> deleteAccount(@PathVariable UUID accountId) {
+    userAccountService.deleteAccountById(accountId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @ServiceOnlyPermission
+  @DeleteMapping("/customer")
+  public ResponseEntity<?> initiateCustomerDeletion(@Valid @RequestBody DeleteAccountDto deleteAccountDto) {
+    userAccountService.initiateCustomerDeletion(deleteAccountDto);
+    return ResponseEntity.noContent().build();
+  }
+
+  @ServiceOnlyPermission
+  @DeleteMapping("/customer/confirm")
+  public ResponseEntity<UUID> completeCustomerDeletion(@Valid @RequestBody DeleteAccountDto deleteAccountDto) {
+    var accountId = userAccountService.completeCustomerDeletion(deleteAccountDto);
+    return ResponseEntity.ok(accountId);
   }
 }

@@ -5,7 +5,8 @@ public enum UserRole {
   CUSTOMER("ROLE_CUSTOMER"),
   TRAVEL_AGENT("ROLE_TRAVEL_AGENT"),
   EMPLOYEE("ROLE_EMPLOYEE"),
-  ADMIN("ROLE_ADMIN");
+  ADMIN("ROLE_ADMIN"),
+  SERVICE("ROLE_SERVICE");
 
   private final String roleName;
 

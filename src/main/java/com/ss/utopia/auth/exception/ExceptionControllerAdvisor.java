@@ -81,6 +81,19 @@ public class ExceptionControllerAdvisor {
     return response;
   }
 
+  @ResponseStatus(HttpStatus.CONFLICT)
+  @ExceptionHandler(IllegalCustomerAccountDeletionException.class)
+  public Map<String, Object> illegalCustomerAccountDeletionException(
+      IllegalCustomerAccountDeletionException ex) {
+    log.error(ex.getMessage());
+
+    var response = new HashMap<String, Object>();
+    response.put("error", ex.getMessage());
+    response.put("role", ex.getUserAccount().getUserRole().getRoleName());
+    response.put("status", HttpStatus.CONFLICT.value());
+    return response;
+  }
+
   private String getErrorMessageOrDefault(FieldError error) {
     var msg = error.getDefaultMessage();
     msg = msg == null || msg.isBlank() ? "Unknown validation failure." : msg;

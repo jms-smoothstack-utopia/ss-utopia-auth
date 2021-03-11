@@ -10,4 +10,6 @@ public interface EmailClient {
   void sendForgetPasswordEmail(String token, String email);
 
   void sendConfirmAccountEmail(String recipient, UUID confirmationToken);
+
+  void sendDeleteAccountEmail(String recipient, UUID token);
 }
