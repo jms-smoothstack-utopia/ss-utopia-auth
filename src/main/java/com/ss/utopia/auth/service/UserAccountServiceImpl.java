@@ -137,17 +137,16 @@ public class UserAccountServiceImpl implements UserAccountService {
   }
 
   @Override
-  public UUID completeCustomerDeletion(DeleteAccountDto deleteAccountDto) {
-    authenticate(deleteAccountDto);
-
-    var actionToken = accountActionTokenService.getAndValidateToken(deleteAccountDto.getId());
-    var account = getByEmail(deleteAccountDto.getEmail());
+  public UUID completeCustomerDeletion(UUID confirmationToken) {
+    var actionToken = accountActionTokenService.getAndValidateToken(confirmationToken);
+    var ownerId = actionToken.getOwnerAccountId();
+    var account = getById(ownerId);
 
     if (!isCustomerOrDefault(account)) {
       throw new IllegalCustomerAccountDeletionException(account);
     }
 
-    deleteAccountByEmail(deleteAccountDto.getEmail());
+    deleteAccountById(ownerId);
     accountActionTokenService.deleteToken(actionToken);
     return account.getId();
   }

@@ -24,6 +24,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -296,47 +297,45 @@ class UserAccountServiceImplTest {
 
   @Test
   void test_completeCustomerDeletion_DoesNotThrowExceptionOnCustomerLevelUser() {
-    when(userAccountRepository.findByEmail(mockCustomerAccount.getEmail()))
-        .thenReturn(Optional.of(mockCustomerAccount));
-    when(userAccountRepository.findByEmail(mockDefaultAccountWithId.getEmail()))
-        .thenReturn(Optional.of(mockDefaultAccountWithId));
+    var confirmationToken = UUID.randomUUID();
 
-    when(accountActionTokenService.getAndValidateToken(any()))
-        .thenReturn(AccountActionToken.builder().build());
+    Function<UserAccount, Void> test = user -> {
+      when(userAccountRepository.findById(user.getId()))
+          .thenReturn(Optional.of(user));
 
-    customerLevelAccountList
-        .forEach(account ->
-                     assertDoesNotThrow(() -> service
-                         .completeCustomerDeletion(DeleteAccountDto.builder()
-                                                       .id(account.getId())
-                                                       .email(account.getEmail())
-                                                       .password(validUnhashedPassword)
-                                                       .build())));
+      when(accountActionTokenService.getAndValidateToken(any()))
+          .thenReturn(AccountActionToken.builder()
+                          .ownerAccountId(user.getId())
+                          .token(confirmationToken)
+                          .build());
+
+      assertDoesNotThrow(() -> service.completeCustomerDeletion(confirmationToken));
+      return null;
+    };
+
+    customerLevelAccountList.forEach(test::apply);
   }
 
   @Test
   void test_completeCustomerDeletion_ThrowsExceptionOnAttemptToDeleteElevatedUser() {
-    when(userAccountRepository.findByEmail(mockAdminAccount.getEmail()))
-        .thenReturn(Optional.of(mockAdminAccount));
-    when(userAccountRepository.findByEmail(mockServiceAccount.getEmail()))
-        .thenReturn(Optional.of(mockServiceAccount));
-    when(userAccountRepository.findByEmail(mockEmployeeAccount.getEmail()))
-        .thenReturn(Optional.of(mockEmployeeAccount));
-    when(userAccountRepository.findByEmail(mockTravelAgentAccount.getEmail()))
-        .thenReturn(Optional.of(mockTravelAgentAccount));
+    var confirmationToken = UUID.randomUUID();
 
-    when(accountActionTokenService.getAndValidateToken(any()))
-        .thenReturn(AccountActionToken.builder().build());
+    Function<UserAccount, Void> test = user -> {
+      when(userAccountRepository.findById(user.getId()))
+          .thenReturn(Optional.of(user));
 
-    elevatedUserList
-        .forEach(account ->
-                     assertThrows(IllegalCustomerAccountDeletionException.class,
-                                  () -> service
-                                      .completeCustomerDeletion(DeleteAccountDto.builder()
-                                                                    .id(account.getId())
-                                                                    .email(account.getEmail())
-                                                                    .password(validUnhashedPassword)
-                                                                    .build())));
+      when(accountActionTokenService.getAndValidateToken(any()))
+          .thenReturn(AccountActionToken.builder()
+                          .ownerAccountId(user.getId())
+                          .token(confirmationToken)
+                          .build());
+
+      assertThrows(IllegalCustomerAccountDeletionException.class,
+                   () -> service.completeCustomerDeletion(confirmationToken));
+      return null;
+    };
+
+    elevatedUserList.forEach(test::apply);
   }
 
   @Test
@@ -346,13 +345,5 @@ class UserAccountServiceImplTest {
 
     assertThrows(AuthenticationException.class,
                  () -> service.initiateCustomerDeletion(DeleteAccountDto.builder().build()));
-  }
-
-  @Test
-  void test_completeCustomerDeletion_ThrowsAuthenticationException() {
-    when(authenticationManager.authenticate(any()))
-        .thenThrow(new AuthenticationCredentialsNotFoundException(""));
-    assertThrows(AuthenticationException.class,
-                 () -> service.completeCustomerDeletion(DeleteAccountDto.builder().build()));
   }
 }

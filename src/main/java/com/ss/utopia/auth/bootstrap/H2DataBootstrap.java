@@ -31,6 +31,7 @@ public class H2DataBootstrap implements CommandLineRunner {
     loadCustomerUser();
     loadTravelAgentUser();
     loadEmployeeUser();
+    loadServiceUser();
     loadAdminUser();
   }
 
@@ -68,6 +69,16 @@ public class H2DataBootstrap implements CommandLineRunner {
         .email("employee@test.com")
         .password(encodedPassword)
         .userRole(UserRole.EMPLOYEE)
+        .confirmed(true)
+        .build();
+    userAccountRepository.save(user);
+  }
+
+  private void loadServiceUser() {
+    var user = UserAccount.builder()
+        .email("service@test.com")
+        .password(encodedPassword)
+        .userRole(UserRole.SERVICE)
         .confirmed(true)
         .build();
     userAccountRepository.save(user);
