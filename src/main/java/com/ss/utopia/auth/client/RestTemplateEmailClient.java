@@ -2,6 +2,7 @@ package com.ss.utopia.auth.client;
 
 import com.ss.utopia.auth.client.email.AbstractUrlEmail;
 import com.ss.utopia.auth.client.email.AccountConfirmationEmail;
+import com.ss.utopia.auth.client.email.DeleteAccountEmail;
 import com.ss.utopia.auth.client.email.PasswordResetEmail;
 import com.ss.utopia.auth.exception.EmailNotSentException;
 import java.util.UUID;
@@ -28,6 +29,8 @@ public class RestTemplateEmailClient implements EmailClient {
   private String passwordResetBaseUrl;
   @Setter
   private String confirmationBaseUrl;
+  @Setter
+  private String deletionBaseUrl;
 
   private RestTemplateBuilder builder;
   private RestTemplate restTemplate;
@@ -57,6 +60,15 @@ public class RestTemplateEmailClient implements EmailClient {
     var confirmationUrl = confirmationBaseUrl + "/" + confirmationToken;
 
     var email = new AccountConfirmationEmail(recipientEmail, confirmationUrl);
+    var response = restTemplate.postForEntity(sesEndpoint, email, String.class);
+
+    handleResponse(response, email);
+  }
+
+  @Override
+  public void sendDeleteAccountEmail(String recipient, UUID token) {
+    var deletionUrl = deletionBaseUrl + "/" + token;
+    var email = new DeleteAccountEmail(recipient, deletionUrl);
     var response = restTemplate.postForEntity(sesEndpoint, email, String.class);
 
     handleResponse(response, email);

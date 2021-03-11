@@ -2,6 +2,7 @@ package com.ss.utopia.auth.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -9,21 +10,26 @@ import static org.mockito.Mockito.when;
 
 import com.ss.utopia.auth.client.EmailClient;
 import com.ss.utopia.auth.dto.CreateUserAccountDto;
+import com.ss.utopia.auth.dto.DeleteAccountDto;
 import com.ss.utopia.auth.entity.AccountAction;
 import com.ss.utopia.auth.entity.AccountActionToken;
 import com.ss.utopia.auth.entity.UserAccount;
 import com.ss.utopia.auth.entity.UserRole;
 import com.ss.utopia.auth.exception.DuplicateEmailException;
+import com.ss.utopia.auth.exception.IllegalCustomerAccountDeletionException;
 import com.ss.utopia.auth.exception.NoSuchAccountActionToken;
 import com.ss.utopia.auth.exception.NoSuchUserAccountException;
-import com.ss.utopia.auth.repository.AccountActionTokenRepository;
 import com.ss.utopia.auth.repository.UserAccountRepository;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 class UserAccountServiceImplTest {
@@ -35,18 +41,61 @@ class UserAccountServiceImplTest {
   final String validUnhashedPassword = "abCD1234!@";
   final String validHashedPassword = "ImFiQ0QxMjM0IUAi";
 
-  final UserAccount accountWithoutId = UserAccount.builder()
+  final UserAccount mockDefaultAccountWithoutId = UserAccount.builder()
       .email(validEmail)
       .password(validHashedPassword)
       .userRole(UserRole.DEFAULT)
       .build();
 
-  final UserAccount accountWithId = UserAccount.builder()
+  final UserAccount mockDefaultAccountWithId = UserAccount.builder()
       .id(accountId)
       .email(validEmail)
       .password(validHashedPassword)
       .userRole(UserRole.DEFAULT)
       .build();
+
+  final UserAccount mockAdminAccount = UserAccount.builder()
+      .id(UUID.randomUUID())
+      .email("admin@test.com")
+      .password(validHashedPassword)
+      .userRole(UserRole.ADMIN)
+      .build();
+
+  final UserAccount mockServiceAccount = UserAccount.builder()
+      .id(UUID.randomUUID())
+      .email("service@test.com")
+      .password(validHashedPassword)
+      .userRole(UserRole.SERVICE)
+      .build();
+
+  final UserAccount mockEmployeeAccount = UserAccount.builder()
+      .id(UUID.randomUUID())
+      .email("employee@test.com")
+      .password(validHashedPassword)
+      .userRole(UserRole.EMPLOYEE)
+      .build();
+
+  final UserAccount mockTravelAgentAccount = UserAccount.builder()
+      .id(UUID.randomUUID())
+      .email("travel_agent@test.com")
+      .password(validHashedPassword)
+      .userRole(UserRole.TRAVEL_AGENT)
+      .build();
+
+  final UserAccount mockCustomerAccount = UserAccount.builder()
+      .id(UUID.randomUUID())
+      .email("customer@test.com")
+      .password(validHashedPassword)
+      .userRole(UserRole.CUSTOMER)
+      .build();
+
+  final List<UserAccount> elevatedUserList = List.of(mockAdminAccount,
+                                                     mockServiceAccount,
+                                                     mockEmployeeAccount,
+                                                     mockTravelAgentAccount);
+
+  final List<UserAccount> customerLevelAccountList = List.of(mockDefaultAccountWithId,
+                                                             mockCustomerAccount);
 
   final AccountActionToken mockConfirmationToken = AccountActionToken.builder()
       .ownerAccountId(accountId)
@@ -62,14 +111,16 @@ class UserAccountServiceImplTest {
       .build();
 
   UserAccountRepository userAccountRepository = Mockito.mock(UserAccountRepository.class);
+  AuthenticationManager authenticationManager = Mockito.mock(AuthenticationManager.class);
   BCryptPasswordEncoder passwordEncoder = Mockito.mock(BCryptPasswordEncoder.class);
-  AccountActionTokenRepository accountActionTokenRepository = Mockito.mock(
-      AccountActionTokenRepository.class);
+  AccountActionTokenService accountActionTokenService = Mockito.mock(AccountActionTokenService.class);
   EmailClient emailClient = Mockito.mock(EmailClient.class);
-  UserAccountService serviceThatIsBeingTested = new UserAccountServiceImpl(userAccountRepository,
-                                                                           passwordEncoder,
-                                                                           accountActionTokenRepository,
-                                                                           emailClient);
+
+  UserAccountService service = new UserAccountServiceImpl(userAccountRepository,
+                                                          authenticationManager,
+                                                          passwordEncoder,
+                                                          accountActionTokenService,
+                                                          emailClient);
 
   @BeforeEach
   void beforeEach() {
@@ -79,10 +130,21 @@ class UserAccountServiceImplTest {
   }
 
   @Test
-  void test_createNewAccount_ReturnsCreatedAccountOnSuccess() {
-    when(userAccountRepository.save(accountWithoutId)).thenReturn(accountWithId);
+  void test_getAll_ReturnsListWithPasswordsAsNull() {
+    when(userAccountRepository.findAll()).thenReturn(List.of(mockDefaultAccountWithId,
+                                                             mockDefaultAccountWithoutId));
 
-    when(accountActionTokenRepository.save(mockConfirmationToken))
+    service.getAll()
+        .forEach(account -> assertNull(account.getPassword()));
+  }
+
+  @Test
+  void test_createNewAccount_ReturnsCreatedAccountOnSuccess() {
+    when(userAccountRepository.save(mockDefaultAccountWithoutId)).thenReturn(
+        mockDefaultAccountWithId);
+
+    when(accountActionTokenService.createToken(mockConfirmationToken.getOwnerAccountId(),
+                                               mockConfirmationToken.getAction()))
         .thenReturn(persistedConfirmationToken);
 
     var dto = CreateUserAccountDto.builder()
@@ -90,9 +152,9 @@ class UserAccountServiceImplTest {
         .password(validUnhashedPassword)
         .build();
 
-    var result = serviceThatIsBeingTested.createNewAccount(dto);
+    var result = service.createNewAccount(dto);
 
-    assertEquals(accountWithId, result);
+    assertEquals(mockDefaultAccountWithId, result);
   }
 
   @Test
@@ -107,10 +169,10 @@ class UserAccountServiceImplTest {
         .build();
 
     assertThrows(DuplicateEmailException.class,
-                 () -> serviceThatIsBeingTested.createNewAccount(dto));
+                 () -> service.createNewAccount(dto));
 
     try {
-      serviceThatIsBeingTested.createNewAccount(dto);
+      service.createNewAccount(dto);
     } catch (DuplicateEmailException ex) {
       var emailInEx = ex.getEmail();
       assertEquals(email, emailInEx);
@@ -132,60 +194,165 @@ class UserAccountServiceImplTest {
 
     dto.setEmail(null);
     assertThrows(IllegalArgumentException.class,
-                 () -> serviceThatIsBeingTested.createNewAccount(dto));
+                 () -> service.createNewAccount(dto));
 
     dto.setEmail("");
     assertThrows(IllegalArgumentException.class,
-                 () -> serviceThatIsBeingTested.createNewAccount(dto));
+                 () -> service.createNewAccount(dto));
 
     dto.setEmail("Definitely not an email");
     assertThrows(IllegalArgumentException.class,
-                 () -> serviceThatIsBeingTested.createNewAccount(dto));
+                 () -> service.createNewAccount(dto));
 
     dto.setEmail(validEmail);
     dto.setPassword(null);
     assertThrows(IllegalArgumentException.class,
-                 () -> serviceThatIsBeingTested.createNewAccount(dto));
+                 () -> service.createNewAccount(dto));
 
     dto.setPassword("");
     assertThrows(IllegalArgumentException.class,
-                 () -> serviceThatIsBeingTested.createNewAccount(dto));
+                 () -> service.createNewAccount(dto));
 
     dto.setPassword("asdfasdfasdf");
     assertThrows(IllegalArgumentException.class,
-                 () -> serviceThatIsBeingTested.createNewAccount(dto));
+                 () -> service.createNewAccount(dto));
 
     assertThrows(IllegalArgumentException.class,
-                 () -> serviceThatIsBeingTested.createNewAccount(null));
+                 () -> service.createNewAccount(null));
   }
 
   @Test
   void test_confirmAccountRegistration_DoesNotThrowOnValidUUID() {
-    when(accountActionTokenRepository.findById(any(UUID.class)))
-        .thenReturn(Optional.ofNullable(persistedConfirmationToken));
+    when(accountActionTokenService.getAndValidateToken(any(UUID.class)))
+        .thenReturn(persistedConfirmationToken);
 
     when(userAccountRepository.findById(any(UUID.class)))
-        .thenReturn(Optional.of(accountWithId));
+        .thenReturn(Optional.of(mockDefaultAccountWithId));
 
-    assertDoesNotThrow(() -> serviceThatIsBeingTested.confirmAccountRegistration(UUID.randomUUID()));
+    assertDoesNotThrow(() -> service.confirmAccountRegistration(UUID.randomUUID()));
   }
 
   @Test
   void test_confirmAccountRegistration_ThrowsNoSuchAccountTokenExceptionOnTokenNotFound() {
-    when(accountActionTokenRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
+    when(accountActionTokenService.getAndValidateToken(any(UUID.class)))
+        .thenThrow(new NoSuchAccountActionToken(null));
 
     assertThrows(NoSuchAccountActionToken.class,
-                 () -> serviceThatIsBeingTested.confirmAccountRegistration(UUID.randomUUID()));
+                 () -> service.confirmAccountRegistration(UUID.randomUUID()));
   }
 
   @Test
   void test_confirmAccountRegistration_ThrowsNoSuchUserAccountExceptionOnUserNotFound() {
-    when(accountActionTokenRepository.findById(any(UUID.class)))
-        .thenReturn(Optional.ofNullable(persistedConfirmationToken));
+    when(accountActionTokenService.getAndValidateToken(any(UUID.class)))
+        .thenReturn(persistedConfirmationToken);
 
     when(userAccountRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
     assertThrows(NoSuchUserAccountException.class,
-                 () -> serviceThatIsBeingTested.confirmAccountRegistration(UUID.randomUUID()));
+                 () -> service.confirmAccountRegistration(UUID.randomUUID()));
+  }
+
+  @Test
+  void test_initiateCustomerDeletion_DoesNotThrowExceptionOnCustomerLevelUser() {
+    when(userAccountRepository.findById(mockCustomerAccount.getId()))
+        .thenReturn(Optional.of(mockCustomerAccount));
+    when(userAccountRepository.findById(mockDefaultAccountWithId.getId()))
+        .thenReturn(Optional.of(mockDefaultAccountWithId));
+
+    when(accountActionTokenService.createToken(any(), any()))
+        .thenReturn(AccountActionToken.builder().token(UUID.randomUUID()).build());
+
+    customerLevelAccountList
+        .forEach(account ->
+                     assertDoesNotThrow(() -> service
+                         .initiateCustomerDeletion(DeleteAccountDto.builder()
+                                                       .id(account.getId())
+                                                       .email(account.getEmail())
+                                                       .password(validUnhashedPassword)
+                                                       .build())));
+  }
+
+  @Test
+  void test_initiateCustomerDeletion_ThrowsExceptionOnAttemptToDeleteElevatedUser() {
+    when(userAccountRepository.findById(mockAdminAccount.getId()))
+        .thenReturn(Optional.of(mockAdminAccount));
+    when(userAccountRepository.findById(mockServiceAccount.getId()))
+        .thenReturn(Optional.of(mockServiceAccount));
+    when(userAccountRepository.findById(mockEmployeeAccount.getId()))
+        .thenReturn(Optional.of(mockEmployeeAccount));
+    when(userAccountRepository.findById(mockTravelAgentAccount.getId()))
+        .thenReturn(Optional.of(mockTravelAgentAccount));
+
+    elevatedUserList
+        .forEach(account ->
+                     assertThrows(IllegalCustomerAccountDeletionException.class,
+                                  () -> service
+                                      .initiateCustomerDeletion(DeleteAccountDto.builder()
+                                                                    .id(account.getId())
+                                                                    .email(account.getEmail())
+                                                                    .password(validUnhashedPassword)
+                                                                    .build())));
+  }
+
+  @Test
+  void test_completeCustomerDeletion_DoesNotThrowExceptionOnCustomerLevelUser() {
+    when(userAccountRepository.findByEmail(mockCustomerAccount.getEmail()))
+        .thenReturn(Optional.of(mockCustomerAccount));
+    when(userAccountRepository.findByEmail(mockDefaultAccountWithId.getEmail()))
+        .thenReturn(Optional.of(mockDefaultAccountWithId));
+
+    when(accountActionTokenService.getAndValidateToken(any()))
+        .thenReturn(AccountActionToken.builder().build());
+
+    customerLevelAccountList
+        .forEach(account ->
+                     assertDoesNotThrow(() -> service
+                         .completeCustomerDeletion(DeleteAccountDto.builder()
+                                                       .id(account.getId())
+                                                       .email(account.getEmail())
+                                                       .password(validUnhashedPassword)
+                                                       .build())));
+  }
+
+  @Test
+  void test_completeCustomerDeletion_ThrowsExceptionOnAttemptToDeleteElevatedUser() {
+    when(userAccountRepository.findByEmail(mockAdminAccount.getEmail()))
+        .thenReturn(Optional.of(mockAdminAccount));
+    when(userAccountRepository.findByEmail(mockServiceAccount.getEmail()))
+        .thenReturn(Optional.of(mockServiceAccount));
+    when(userAccountRepository.findByEmail(mockEmployeeAccount.getEmail()))
+        .thenReturn(Optional.of(mockEmployeeAccount));
+    when(userAccountRepository.findByEmail(mockTravelAgentAccount.getEmail()))
+        .thenReturn(Optional.of(mockTravelAgentAccount));
+
+    when(accountActionTokenService.getAndValidateToken(any()))
+        .thenReturn(AccountActionToken.builder().build());
+
+    elevatedUserList
+        .forEach(account ->
+                     assertThrows(IllegalCustomerAccountDeletionException.class,
+                                  () -> service
+                                      .completeCustomerDeletion(DeleteAccountDto.builder()
+                                                                    .id(account.getId())
+                                                                    .email(account.getEmail())
+                                                                    .password(validUnhashedPassword)
+                                                                    .build())));
+  }
+
+  @Test
+  void test_initiateCustomerDeletion_ThrowsAuthenticationException() {
+    when(authenticationManager.authenticate(any()))
+        .thenThrow(new AuthenticationCredentialsNotFoundException(""));
+
+    assertThrows(AuthenticationException.class,
+                 () -> service.initiateCustomerDeletion(DeleteAccountDto.builder().build()));
+  }
+
+  @Test
+  void test_completeCustomerDeletion_ThrowsAuthenticationException() {
+    when(authenticationManager.authenticate(any()))
+        .thenThrow(new AuthenticationCredentialsNotFoundException(""));
+    assertThrows(AuthenticationException.class,
+                 () -> service.completeCustomerDeletion(DeleteAccountDto.builder().build()));
   }
 }

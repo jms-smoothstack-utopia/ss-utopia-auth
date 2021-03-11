@@ -1,11 +1,14 @@
 package com.ss.utopia.auth.service;
 
 import com.ss.utopia.auth.dto.CreateUserAccountDto;
-import com.ss.utopia.auth.dto.ResetPasswordDto;
+import com.ss.utopia.auth.dto.DeleteAccountDto;
 import com.ss.utopia.auth.entity.UserAccount;
+import java.util.List;
 import java.util.UUID;
 
 public interface UserAccountService {
+
+  List<UserAccount> getAll();
 
   UserAccount getById(UUID id);
 
@@ -18,4 +21,12 @@ public interface UserAccountService {
   void sendAccountConfirmation(UserAccount userAccount);
 
   void confirmAccountRegistration(UUID confirmationTokenId);
+
+  void deleteAccountById(UUID accountId);
+
+  UUID deleteAccountByEmail(String accountEmail);
+
+  void initiateCustomerDeletion(DeleteAccountDto deleteAccountDto);
+
+  UUID completeCustomerDeletion(DeleteAccountDto deleteAccountDto);
 }
