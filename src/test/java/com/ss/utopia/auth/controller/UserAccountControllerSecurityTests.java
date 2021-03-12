@@ -364,12 +364,12 @@ public class UserAccountControllerSecurityTests {
                                                             .password("abCD1234!@")
                                                             .build());
 
+    var url = EndpointConstants.API_V_0_1_ACCOUNTS + "/customer/" + UUID.randomUUID();
+
     for (var user : alwaysAuthed) {
       var result = mvc
           .perform(
-              delete(EndpointConstants.API_V_0_1_ACCOUNTS + "/customer/confirm")
-                  .contentType(MediaType.APPLICATION_JSON)
-                  .content(content)
+              delete(url)
                   .header("Authorization", getJwt(user)))
           .andReturn().getResponse().getStatus();
       assertNotEquals(403, result, "Failed on " + user);
@@ -384,9 +384,7 @@ public class UserAccountControllerSecurityTests {
     for (var user : notauthed) {
       var result = mvc
           .perform(
-              delete(EndpointConstants.API_V_0_1_ACCOUNTS + "/customer/confirm")
-                  .contentType(MediaType.APPLICATION_JSON)
-                  .content(content)
+              delete(url)
                   .header("Authorization", getJwt(user)))
           .andReturn().getResponse().getStatus();
 
@@ -394,9 +392,7 @@ public class UserAccountControllerSecurityTests {
     }
     var result = mvc
         .perform(
-            delete(EndpointConstants.API_V_0_1_ACCOUNTS + "/customer/confirm")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(content))
+            delete(url))
         .andReturn().getResponse().getStatus();
 
     assertEquals(403, result, "Failed on no authorization");
