@@ -94,7 +94,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     log.debug("Created JWT: " + jwt);
 
     var respBody = objectMapper
-        .writeValueAsString(new AuthResponse(headerVal, expiresAt.getTime()));
+        .writeValueAsString(new AuthResponse(id, headerVal, expiresAt.getTime()));
 
     response.addHeader(securityConstants.getJwtHeaderName(), headerVal);
     response.getWriter().write(respBody);

@@ -3,7 +3,6 @@ package com.ss.utopia.auth.security;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import com.auth0.jwt.JWT;
@@ -18,7 +17,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.servlet.FilterChain;
@@ -158,7 +156,6 @@ class JwtAuthenticationFilterTest {
 
     when(mockAuthResult.getName()).thenReturn(mockAuthDto.getEmail());
 
-
     when(mockAuthResult.getPrincipal()).thenReturn(mockUserAccount);
 
     var mockAuthorities = mockUserAccount.getAuthorities()
@@ -176,8 +173,9 @@ class JwtAuthenticationFilterTest {
 
     var spyResponse = Mockito.spy(mockResponse);
 
-    var expectedAuthResponse = new AuthResponse(
-        "Bearer " + expectedJwt, mockSecurityConstants.getExpiresAt().getTime());
+    var expectedAuthResponse = new AuthResponse(mockUserAccount.getId(),
+                                                "Bearer " + expectedJwt,
+                                                mockSecurityConstants.getExpiresAt().getTime());
 
     var expectedAuthResponseAsJson = new ObjectMapper()
         .writeValueAsString(expectedAuthResponse);
@@ -212,8 +210,4 @@ class JwtAuthenticationFilterTest {
     Mockito.verify(spyResponse).addHeader("Authorization", "Bearer " + expectedJwt);
   }
 
-  @Test
-  void bcrypt() {
-    System.out.println(new BCryptPasswordEncoder().encode("test"));
-  }
 }
