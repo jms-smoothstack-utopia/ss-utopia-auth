@@ -63,8 +63,8 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @Transactional(rollbackFor = EmailNotSentException.class)
   public UserAccount createNewAccount(CreateUserAccountDto createUserAccountDto) {
-    log.debug("Create new account email=" + createUserAccountDto.getEmail());
     validateDto(createUserAccountDto);
+    log.debug("Create new account email=" + createUserAccountDto.getEmail());
 
     userAccountRepository.findByEmail(createUserAccountDto.getEmail())
         .ifPresent(userAccount -> {
