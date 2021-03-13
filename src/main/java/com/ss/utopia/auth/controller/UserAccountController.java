@@ -106,9 +106,9 @@ public class UserAccountController {
   }
 
   @ServiceOnlyPermission
-  @DeleteMapping("/customer/confirm")
-  public ResponseEntity<UUID> completeCustomerDeletion(@Valid @RequestBody DeleteAccountDto deleteAccountDto) {
-    var accountId = userAccountService.completeCustomerDeletion(deleteAccountDto);
+  @DeleteMapping("/customer/{confirmationToken}")
+  public ResponseEntity<UUID> completeCustomerDeletion(@PathVariable UUID confirmationToken) {
+    var accountId = userAccountService.completeCustomerDeletion(confirmationToken);
     return ResponseEntity.ok(accountId);
   }
 }

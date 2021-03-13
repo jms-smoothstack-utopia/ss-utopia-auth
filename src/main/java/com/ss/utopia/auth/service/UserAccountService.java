@@ -28,5 +28,5 @@ public interface UserAccountService {
 
   void initiateCustomerDeletion(DeleteAccountDto deleteAccountDto);
 
-  UUID completeCustomerDeletion(DeleteAccountDto deleteAccountDto);
+  UUID completeCustomerDeletion(UUID confirmationToken);
 }
