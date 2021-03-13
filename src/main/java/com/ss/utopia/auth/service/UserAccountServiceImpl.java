@@ -21,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +39,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
   @Override
   public List<UserAccount> getAll() {
+    log.debug("Get all accounts.");
     return userAccountRepository.findAll()
         .stream()
         .peek(account -> account.setPassword(null))
@@ -48,12 +48,14 @@ public class UserAccountServiceImpl implements UserAccountService {
 
   @Override
   public UserAccount getById(UUID id) {
+    log.debug("Get account=" + id);
     return userAccountRepository.findById(id)
         .orElseThrow(() -> new NoSuchUserAccountException(id));
   }
 
   @Override
   public UserAccount getByEmail(String email) {
+    log.debug("Get account=" + email);
     return userAccountRepository.findByEmail(email)
         .orElseThrow(() -> new NoSuchUserAccountException(email));
   }
@@ -61,6 +63,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @Transactional(rollbackFor = EmailNotSentException.class)
   public UserAccount createNewAccount(CreateUserAccountDto createUserAccountDto) {
+    log.debug("Create new account email=" + createUserAccountDto.getEmail());
     validateDto(createUserAccountDto);
 
     userAccountRepository.findByEmail(createUserAccountDto.getEmail())
@@ -82,6 +85,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
   @Override
   public void sendAccountConfirmation(UserAccount userAccount) {
+    log.debug("Send account confirmation account=" + userAccount.getId());
     var confirmationToken = accountActionTokenService.createToken(userAccount.getId(),
                                                                   AccountAction.CONFIRMATION);
 
@@ -90,6 +94,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
   @Override
   public void confirmAccountRegistration(UUID confirmationTokenId) {
+    log.debug("Confirm account, token=" + confirmationTokenId);
     var token = accountActionTokenService.getAndValidateToken(confirmationTokenId);
 
     var account = getById(token.getOwnerAccountId());
@@ -104,18 +109,21 @@ public class UserAccountServiceImpl implements UserAccountService {
 
   @Override
   public void updateAccount(UserAccount userAccount) {
+    log.debug("Update account=" + userAccount.getId());
     userAccountRepository.findById(userAccount.getId())
         .ifPresent(a -> userAccountRepository.save(userAccount));
   }
 
   @Override
   public void deleteAccountById(UUID accountId) {
+    log.debug("Delete account=" + accountId);
     var account = getById(accountId);
     userAccountRepository.delete(account);
   }
 
   @Override
   public UUID deleteAccountByEmail(String accountEmail) {
+    log.debug("Delete account=" + accountEmail);
     var account = getByEmail(accountEmail);
     userAccountRepository.delete(account);
     return account.getId();
@@ -123,6 +131,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
   @Override
   public void initiateCustomerDeletion(DeleteAccountDto deleteAccountDto) {
+    log.debug("Initiate deletion=" + deleteAccountDto.getEmail());
     authenticate(deleteAccountDto);
 
     var account = getById(deleteAccountDto.getId());
@@ -138,6 +147,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
   @Override
   public UUID completeCustomerDeletion(UUID confirmationToken) {
+    log.debug("Complete deletion token=" + confirmationToken);
     var actionToken = accountActionTokenService.getAndValidateToken(confirmationToken);
     var ownerId = actionToken.getOwnerAccountId();
     var account = getById(ownerId);

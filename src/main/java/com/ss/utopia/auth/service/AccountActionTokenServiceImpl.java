@@ -8,8 +8,10 @@ import com.ss.utopia.auth.repository.AccountActionTokenRepository;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AccountActionTokenServiceImpl implements AccountActionTokenService {
@@ -18,6 +20,7 @@ public class AccountActionTokenServiceImpl implements AccountActionTokenService 
 
   @Override
   public AccountActionToken getToken(UUID token) {
+    log.debug("Get token=" + token);
     return accountActionTokenRepository.findById(token)
         .orElseThrow(() -> new NoSuchAccountActionToken(token));
   }
@@ -35,6 +38,7 @@ public class AccountActionTokenServiceImpl implements AccountActionTokenService 
 
   @Override
   public AccountActionToken createToken(UUID ownerId, AccountAction action) {
+    log.debug("Create token, owner=" + ownerId + " action=" + action);
     return accountActionTokenRepository.save(AccountActionToken.builder()
                                                  .ownerAccountId(ownerId)
                                                  .action(action)
@@ -48,6 +52,7 @@ public class AccountActionTokenServiceImpl implements AccountActionTokenService 
 
   @Override
   public void deleteToken(UUID tokenId) {
+    log.debug("Delete token=" + tokenId);
     accountActionTokenRepository.findById(tokenId)
         .ifPresent(accountActionTokenRepository::delete);
   }
