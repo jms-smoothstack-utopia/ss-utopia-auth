@@ -13,6 +13,9 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -96,6 +99,14 @@ public class UserAccountController {
   public ResponseEntity<?> deleteAccount(@PathVariable UUID accountId) {
     userAccountService.deleteAccountById(accountId);
     return ResponseEntity.noContent().build();
+  }
+
+  @ServiceOnlyPermission
+  @PutMapping(value = "/customer/{customerId}", consumes = MediaType.TEXT_PLAIN_VALUE)
+  public ResponseEntity<?> updateCustomerEmail(@PathVariable UUID customerId,
+                                               @Valid @Email @NotNull @NotBlank @RequestBody String newEmail) {
+    userAccountService.updateEmail(customerId, newEmail);
+    return ResponseEntity.ok().build();
   }
 
   @ServiceOnlyPermission
