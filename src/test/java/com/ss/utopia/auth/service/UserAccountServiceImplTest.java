@@ -2,6 +2,7 @@ package com.ss.utopia.auth.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -16,6 +17,7 @@ import com.ss.utopia.auth.entity.AccountActionToken;
 import com.ss.utopia.auth.entity.UserAccount;
 import com.ss.utopia.auth.entity.UserRole;
 import com.ss.utopia.auth.exception.DuplicateEmailException;
+import com.ss.utopia.auth.exception.IllegalAccountModificationException;
 import com.ss.utopia.auth.exception.IllegalCustomerAccountDeletionException;
 import com.ss.utopia.auth.exception.NoSuchAccountActionToken;
 import com.ss.utopia.auth.exception.NoSuchUserAccountException;
@@ -345,5 +347,45 @@ class UserAccountServiceImplTest {
 
     assertThrows(AuthenticationException.class,
                  () -> service.initiateCustomerDeletion(DeleteAccountDto.builder().build()));
+  }
+
+  @Test
+  void test_updateEmail_ThrowsExceptionOnInvalidEmail() {
+    var id = UUID.randomUUID();
+    assertThrows(IllegalArgumentException.class, () -> service.updateEmail(id, null));
+    assertThrows(IllegalArgumentException.class, () -> service.updateEmail(id, ""));
+    assertThrows(IllegalArgumentException.class, () -> service.updateEmail(id, "        "));
+    assertThrows(IllegalArgumentException.class, () -> service.updateEmail(id, "no at sign"));
+  }
+
+  @Test
+  void test_updateEmail_UpdatesEmail() {
+    when(userAccountRepository.save(any())).thenReturn(mockCustomerAccount);
+    when(userAccountRepository.findById(mockCustomerAccount.getId()))
+        .thenReturn(Optional.of(mockCustomerAccount));
+    var oldEmail = mockCustomerAccount.getEmail();
+
+    service.updateEmail(mockCustomerAccount.getId(), "new@test.com");
+
+    var newEmail = mockCustomerAccount.getEmail();
+
+    assertNotEquals(oldEmail, newEmail);
+
+    mockCustomerAccount.setEmail(oldEmail);
+  }
+
+  @Test
+  void test_updateEmail_ThrowsExceptionOnNotCustomerAccount() {
+    Function<UserAccount, Void> test = user -> {
+      when(userAccountRepository.findById(user.getId()))
+          .thenReturn(Optional.of(user));
+
+      assertThrows(IllegalAccountModificationException.class, () ->
+          service.updateEmail(user.getId(), "newEmail@whatever.com"));
+
+      return null;
+    };
+
+    elevatedUserList.forEach(test::apply);
   }
 }

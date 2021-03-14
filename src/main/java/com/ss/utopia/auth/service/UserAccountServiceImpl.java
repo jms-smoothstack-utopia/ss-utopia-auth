@@ -8,6 +8,7 @@ import com.ss.utopia.auth.entity.UserAccount;
 import com.ss.utopia.auth.entity.UserRole;
 import com.ss.utopia.auth.exception.DuplicateEmailException;
 import com.ss.utopia.auth.exception.EmailNotSentException;
+import com.ss.utopia.auth.exception.IllegalAccountModificationException;
 import com.ss.utopia.auth.exception.IllegalCustomerAccountDeletionException;
 import com.ss.utopia.auth.exception.NoSuchUserAccountException;
 import com.ss.utopia.auth.repository.UserAccountRepository;
@@ -122,11 +123,16 @@ public class UserAccountServiceImpl implements UserAccountService {
   }
 
   @Override
-  public UUID deleteAccountByEmail(String accountEmail) {
-    log.debug("Delete account=" + accountEmail);
-    var account = getByEmail(accountEmail);
-    userAccountRepository.delete(account);
-    return account.getId();
+  public void updateEmail(UUID accountId, String newEmail) {
+    if (newEmail == null || newEmail.isBlank() || !newEmail.contains("@")) {
+      throw new IllegalArgumentException(newEmail);
+    }
+    var account = getById(accountId);
+    if (!isCustomerOrDefault(account)) {
+      throw new IllegalAccountModificationException(account);
+    }
+    account.setEmail(newEmail);
+    updateAccount(account);
   }
 
   @Override

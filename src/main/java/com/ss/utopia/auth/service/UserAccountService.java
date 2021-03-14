@@ -24,7 +24,7 @@ public interface UserAccountService {
 
   void deleteAccountById(UUID accountId);
 
-  UUID deleteAccountByEmail(String accountEmail);
+  void updateEmail(UUID accountId, String newEmail);
 
   void initiateCustomerDeletion(DeleteAccountDto deleteAccountDto);
 

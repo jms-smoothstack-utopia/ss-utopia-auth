@@ -307,6 +307,52 @@ public class UserAccountControllerSecurityTests {
   }
 
   @Test
+  void test_updateCustomerEmail_OnlyAllowedByServiceOrAdmin() throws Exception {
+    var url = EndpointConstants.API_V_0_1_ACCOUNTS + "/customer/" + UUID.randomUUID();
+
+    var alwaysAuthed = List.of(MockUser.SERVICE, MockUser.ADMIN);
+
+    for (var user : alwaysAuthed) {
+      var result = mvc
+          .perform(
+              put(url)
+                  .contentType(MediaType.TEXT_PLAIN_VALUE)
+                  .content("someemail@whawetver.com")
+                  .header("Authorization", getJwt(user)))
+          .andReturn().getResponse().getStatus();
+
+      assertEquals(200, result, "Failed on " + user);
+    }
+
+    var notauthed = List.of(MockUser.EMPLOYEE,
+                            MockUser.TRAVEL_AGENT,
+                            MockUser.MATCH_CUSTOMER,
+                            MockUser.DEFAULT,
+                            MockUser.UNMATCH_CUSTOMER);
+
+    for (var user : notauthed) {
+      var result = mvc
+          .perform(
+              put(url)
+                  .contentType(MediaType.TEXT_PLAIN_VALUE)
+                  .content("someemail@whawetver.com")
+                  .header("Authorization", getJwt(user)))
+          .andReturn().getResponse().getStatus();
+
+      assertEquals(403, result, "Failed on " + user);
+    }
+
+    var result = mvc
+        .perform(
+            put(url)
+                .contentType(MediaType.TEXT_PLAIN_VALUE)
+                .content("someemail@whawetver.com"))
+        .andReturn().getResponse().getStatus();
+
+    assertEquals(403, result, "Failed on no header");
+  }
+
+  @Test
   void test_initiateCustomerDeletion_OnlyAllowedByServiceOrAdmin() throws Exception {
     var alwaysAuthed = List.of(MockUser.SERVICE, MockUser.ADMIN);
 
