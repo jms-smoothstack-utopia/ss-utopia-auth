@@ -2,6 +2,8 @@ package com.ss.utopia.auth;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootApplication
 public class UtopiaAuthServiceApplication {
@@ -10,4 +12,8 @@ public class UtopiaAuthServiceApplication {
     SpringApplication.run(UtopiaAuthServiceApplication.class, args);
   }
 
+  @Bean
+  public BCryptPasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 }
