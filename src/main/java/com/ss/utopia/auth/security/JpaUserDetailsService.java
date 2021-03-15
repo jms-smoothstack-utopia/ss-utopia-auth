@@ -2,7 +2,6 @@ package com.ss.utopia.auth.security;
 
 import com.ss.utopia.auth.repository.UserAccountRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -19,7 +18,7 @@ public class JpaUserDetailsService implements UserDetailsService {
   }
 
   @Override
-  public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+  public UserDetails loadUserByUsername(String email) {
     log.debug("Load user: email=" + email);
 
     return userAccountRepository.findByEmail(email)

@@ -47,8 +47,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
   @Override
   public Authentication attemptAuthentication(HttpServletRequest request,
-                                              HttpServletResponse response)
-      throws AuthenticationException {
+                                              HttpServletResponse response) {
     log.debug("Attempt Authentication");
     try (var inputStream = request.getInputStream()) {
       var credentials = objectMapper.readValue(inputStream, AuthDto.class);

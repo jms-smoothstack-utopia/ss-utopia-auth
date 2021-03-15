@@ -79,7 +79,6 @@ public class RestTemplateEmailClient implements EmailClient {
       log.debug("Email sent to: " + email.getRecipient());
       log.debug(email.getSubject());
     } else {
-      //todo retry if possible
       log.error("Unable to send confirmation email.");
       log.error("Status code: " + response.getStatusCode().value());
       log.error("Response body: " + response.getBody());

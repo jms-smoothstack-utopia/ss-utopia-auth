@@ -1,24 +1,19 @@
 package com.ss.utopia.auth.security;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Date;
 import lombok.Data;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Data
 @Configuration
+@SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+    justification = "Lombok's generated code checks for null but this isn't an issue.")
 @ConfigurationProperties(prefix = "com.ss.utopia.auth", ignoreUnknownFields = false)
 public class SecurityConstants {
 
   private String endpoint;
-  public String getEndpoint() {
-    if (endpoint == null || endpoint.isEmpty() || endpoint.isBlank()) {
-      return "/login";
-    }
-    return endpoint;
-  }
-
   private String jwtSecret;
   private String jwtHeaderName;
   private String jwtHeaderPrefix;
@@ -32,7 +27,6 @@ public class SecurityConstants {
   }
 
   public Date getExpiresAt() {
-    //todo possible concern with different timezones between services?
     return new Date(System.currentTimeMillis() + jwtExpirationDuration);
   }
 

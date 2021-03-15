@@ -2,7 +2,6 @@ package com.ss.utopia.auth.exception;
 
 import java.util.NoSuchElementException;
 import java.util.UUID;
-import javax.validation.constraints.NotNull;
 
 public class NoSuchUserAccountException extends NoSuchElementException {
 

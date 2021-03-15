@@ -49,7 +49,7 @@ class JwtAuthenticationFilterTest {
 
   @BeforeAll
   static void beforeAll() {
-    when(mockSecurityConstants.getEndpoint()).thenReturn("/authenticate");
+    when(mockSecurityConstants.getEndpoint()).thenReturn("/login");
     when(mockSecurityConstants.getJwtSecret()).thenReturn("superSecret");
     when(mockSecurityConstants.getJwtHeaderName()).thenReturn("Authorization");
     when(mockSecurityConstants.getJwtHeaderPrefix()).thenReturn("Bearer ");

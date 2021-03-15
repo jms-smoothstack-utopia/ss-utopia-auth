@@ -25,8 +25,14 @@ public class AccountActionTokenServiceImpl implements AccountActionTokenService 
         .orElseThrow(() -> new NoSuchAccountActionToken(token));
   }
 
+  /**
+   * Validates that a token is neither inactive nor expired.
+   *
+   * @param token a token to validate.
+   * @throws InvalidTokenException if the given token is expired or inactive.
+   */
   @Override
-  public void validateToken(AccountActionToken token) throws InvalidTokenException {
+  public void validateToken(AccountActionToken token) {
     var now = ZonedDateTime.now();
     var creation = token.getCreation();
     var expiration = creation.plusMinutes(token.getAction().getMinutesToLive());

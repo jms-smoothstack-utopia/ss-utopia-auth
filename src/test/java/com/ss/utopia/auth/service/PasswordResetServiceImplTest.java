@@ -73,7 +73,7 @@ class PasswordResetServiceImplTest {
     var email = "test@test.com";
 
     //cannot actually send emails to customer; must mock response
-    doThrow(new EmailNotSentException())
+    doThrow(new EmailNotSentException(null, null))
         .when(emailClient)
         .sendForgetPasswordEmail(any(String.class), any(String.class));
 
@@ -98,7 +98,6 @@ class PasswordResetServiceImplTest {
                                      .userId(UUID.randomUUID())
                                      .token(token)
                                      .isActive(true)
-                                     .timestamp(new Timestamp(new Date().getTime()))
                                      .build());
     boolean response = passwordResetService.tokenCheck(token);
     assertTrue(response);
@@ -112,7 +111,6 @@ class PasswordResetServiceImplTest {
                                      .email("test@test.com")
                                      .userId(UUID.randomUUID())
                                      .token(token)
-                                     .timestamp(new Timestamp(new Date().getTime()))
                                      .build());
 
     assertThrows(NoSuchElementException.class,
@@ -129,7 +127,6 @@ class PasswordResetServiceImplTest {
                                      .email("test@test.com")
                                      .userId(UUID.randomUUID())
                                      .token(token)
-                                     .timestamp(new Timestamp(new Date().getTime()))
                                      .build());
     NewPasswordDto newPasswordDto = NewPasswordDto.builder()
         .token(UUID.randomUUID().toString())
@@ -162,8 +159,6 @@ class PasswordResetServiceImplTest {
                                      .email(email)
                                      .userId(customerID)
                                      .token(token)
-
-                                     .timestamp(new Timestamp(new Date().getTime()))
                                      .build());
 
     //Setup object to send passwordResetService
@@ -199,7 +194,6 @@ class PasswordResetServiceImplTest {
                                      .userId(customerID)
                                      .isActive(false)
                                      .token(token)
-                                     .timestamp(new Timestamp(new Date().getTime()))
                                      .build());
 
     //Setup object to send passwordResetService

@@ -2,7 +2,6 @@ package com.ss.utopia.auth.service;
 
 import com.ss.utopia.auth.entity.AccountAction;
 import com.ss.utopia.auth.entity.AccountActionToken;
-import com.ss.utopia.auth.exception.InvalidTokenException;
 import java.util.UUID;
 
 public interface AccountActionTokenService {
@@ -15,7 +14,7 @@ public interface AccountActionTokenService {
     return retrieved;
   }
 
-  void validateToken(AccountActionToken token) throws InvalidTokenException;
+  void validateToken(AccountActionToken token);
 
   AccountActionToken createToken(UUID ownerId, AccountAction action);
 

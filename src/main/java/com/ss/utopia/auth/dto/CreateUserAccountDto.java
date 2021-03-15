@@ -17,7 +17,8 @@ import lombok.ToString;
 @Builder
 public class CreateUserAccountDto {
 
-  public static final String REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*-_=+,.?])[A-Za-z\\d!@#$%^&*-_=+,.?]{10,128}$";
+  public static final String REGEX =
+      "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*-_=+,.?])[A-Za-z\\d!@#$%^&*-_=+,.?]{10,128}$";
   public static final String REGEX_MSG = "Password must be between 10 and 128 characters,"
       + " contain at least one lowercase letter,"
       + " at least one uppercase letter,"

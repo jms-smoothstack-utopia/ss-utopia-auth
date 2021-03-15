@@ -35,7 +35,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
       http.headers().frameOptions().disable();
     }
 
-    // fixme: this is duplicated across a few places due to a weird bug with mocking during tests.
     var authEndpoint = securityConstants.getEndpoint();
     if (authEndpoint == null || authEndpoint.isEmpty() || authEndpoint.isBlank()) {
       authEndpoint = "/login";
@@ -43,24 +42,38 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     http
-        .cors().and().csrf().disable()
+        .cors()
+        .and()
+        .csrf()
+        .disable()
         .authorizeRequests()
-        .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
-        .requestMatchers(CorsUtils::isCorsRequest).permitAll()
-        .antMatchers(HttpMethod.POST, authEndpoint).permitAll()
-        .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS).permitAll()
-        .antMatchers(HttpMethod.PUT, EndpointConstants.API_V_0_1_ACCOUNTS + "/confirm/**").permitAll()
-        .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS + "/password-reset").permitAll()
-        .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password").permitAll()
-        .antMatchers(HttpMethod.GET, EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password/{token}").permitAll()
-        .antMatchers(HttpMethod.GET, "/api-docs").permitAll()
-        .anyRequest().authenticated()
+        .requestMatchers(CorsUtils::isPreFlightRequest)
+        .permitAll()
+        .requestMatchers(CorsUtils::isCorsRequest)
+        .permitAll()
+        .antMatchers(HttpMethod.POST, authEndpoint)
+        .permitAll()
+        .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS)
+        .permitAll()
+        .antMatchers(HttpMethod.PUT, EndpointConstants.API_V_0_1_ACCOUNTS + "/confirm/**")
+        .permitAll()
+        .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS + "/password-reset")
+        .permitAll()
+        .antMatchers(HttpMethod.POST, EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password")
+        .permitAll()
+        .antMatchers(HttpMethod.GET, EndpointConstants.API_V_0_1_ACCOUNTS + "/new-password/{token}")
+        .permitAll()
+        .antMatchers(HttpMethod.GET, "/api-docs")
+        .permitAll()
+        .anyRequest()
+        .authenticated()
         .and()
         .addFilter(new JwtAuthenticationFilter(authenticationManager(),
                                                new ObjectMapper(), securityConstants))
         .addFilter(new JwtAuthenticationVerificationFilter(authenticationManager(),
                                                            securityConstants))
-        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        .sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
     ;
   }
 

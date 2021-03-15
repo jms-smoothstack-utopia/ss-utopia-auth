@@ -3,6 +3,7 @@ package com.ss.utopia.auth.service;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -136,6 +137,10 @@ class UserAccountServiceImplTest {
   void test_getAll_ReturnsListWithPasswordsAsNull() {
     when(userAccountRepository.findAll()).thenReturn(List.of(mockDefaultAccountWithId,
                                                              mockDefaultAccountWithoutId));
+
+    // sanity
+    userAccountRepository.findAll()
+        .forEach(account -> assertNotNull(account.getPassword()));
 
     service.getAll()
         .forEach(account -> assertNull(account.getPassword()));
