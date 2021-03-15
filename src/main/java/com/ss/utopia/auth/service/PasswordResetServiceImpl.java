@@ -6,8 +6,6 @@ import com.ss.utopia.auth.dto.ResetPasswordDto;
 import com.ss.utopia.auth.entity.PasswordReset;
 import com.ss.utopia.auth.exception.InvalidTokenException;
 import com.ss.utopia.auth.repository.PasswordResetRepository;
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +43,6 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     //Set user parameters to PasswordReset object
     passwordResetEntry.setUserId(customerId);
     passwordResetEntry.setToken(customerToken);
-    passwordResetEntry.setTimestamp(new Timestamp(new Date().getTime()));
     passwordResetEntry.setEmail(email);
     passwordResetEntry.setActive(true);
 

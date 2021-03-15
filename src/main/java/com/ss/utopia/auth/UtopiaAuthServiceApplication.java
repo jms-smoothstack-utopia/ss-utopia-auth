@@ -13,7 +13,7 @@ public class UtopiaAuthServiceApplication {
   }
 
   @Bean
-  public BCryptPasswordEncoder bCryptPasswordEncoder() {
+  public BCryptPasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
 }

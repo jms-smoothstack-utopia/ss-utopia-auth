@@ -27,10 +27,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -62,7 +60,7 @@ class UserAccountControllerTest {
 
   @BeforeEach
   void beforeEach() {
-    when(securityConstants.getEndpoint()).thenReturn("/authenticate");
+    when(securityConstants.getEndpoint()).thenReturn("/login");
     when(securityConstants.getJwtSecret()).thenReturn("superSecret");
     when(securityConstants.getJwtHeaderName()).thenReturn("Authorization");
     when(securityConstants.getJwtHeaderPrefix()).thenReturn("Bearer ");
@@ -194,7 +192,7 @@ class UserAccountControllerTest {
     String jsonDto = jsonMapper.writeValueAsString(resetPasswordDto);
 
     when(passwordResetService.addPasswordReset(any(resetPasswordDto.getClass())))
-        .thenThrow(new EmailNotSentException());
+        .thenThrow(new EmailNotSentException(null, null));
 
     mvc.perform(
         post(EndpointConstants.API_V_0_1_ACCOUNTS + "/password-reset")

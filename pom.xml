@@ -19,6 +19,18 @@
     <spring-cloud.version>2020.0.1</spring-cloud.version>
     <docker.image.prefix>ss-utopia</docker.image.prefix>
     <docker.image.name>auth-service</docker.image.name>
+    <spotbugs.version>4.0.0</spotbugs.version>
+    <sonar.coverage.exclusions>
+      **/entity/*.java,
+      **/dto/*.java,
+      **/exception/*.java,
+      **/bootstrap/*.java,
+      **/client/email/*Email.java,
+      **/controller/EndpointConstants.java,
+      **/security/SecurityConstants.java,
+      **/security/JwtPrincipal.java,
+      **/UtopiaAuthServiceApplication.java
+    </sonar.coverage.exclusions>
   </properties>
 
   <dependencies>
@@ -99,6 +111,12 @@
       <artifactId>spring-security-test</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-maven-plugin</artifactId>
+      <version>${spotbugs.version}</version>
+    </dependency>
   </dependencies>
 
   <dependencyManagement>
@@ -132,6 +150,8 @@
         </configuration>
       </plugin>
 
+      <!-- Integrated plugin for use with Docker and Maven,
+           use goals `docker:build` and `docker:push` -->
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
@@ -155,6 +175,115 @@
               </build>
             </image>
           </images>
+        </configuration>
+      </plugin>
+
+      <!-- Linting check -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.1.1</version>
+        <configuration>
+          <configLocation>config/google_checks.xml</configLocation>
+          <encoding>UTF-8</encoding>
+          <consoleOutput>true</consoleOutput>
+          <failsOnError>true</failsOnError>
+          <maxAllowedViolations>0</maxAllowedViolations>
+          <violationSeverity>ALL</violationSeverity>
+          <failOnViolation>true</failOnViolation>
+        </configuration>
+        <executions>
+          <execution>
+            <id>validate</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Static Code Analysis for common bugs -->
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <version>${spotbugs.version}</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs</artifactId>
+            <version>4.0.1</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Static Code Analysis for common bugs and duplicated code -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <failOnViolation>true</failOnViolation>
+          <printFailingErrors>true</printFailingErrors>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- SonarQube for additional static code analysis -->
+      <plugin>
+        <groupId>org.sonarsource.scanner.maven</groupId>
+        <artifactId>sonar-maven-plugin</artifactId>
+        <version>3.7.0.1746</version>
+      </plugin>
+
+      <!-- For Sonarqube's test coverage metrics -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.3</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>post-unit-test</id>
+            <phase>test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+            <configuration>
+              <!-- Sets the path to the file which contains the execution data. -->
+              <dataFile>target/jacoco.exec</dataFile>
+              <!-- Sets the output directory for the code coverage report. -->
+              <outputDirectory>target/my-reports</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+          <destFile>target/jacoco.exec</destFile>
         </configuration>
       </plugin>
 

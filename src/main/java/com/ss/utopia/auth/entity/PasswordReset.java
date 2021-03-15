@@ -1,8 +1,7 @@
 package com.ss.utopia.auth.entity;
 
-import java.sql.Timestamp;
+import java.time.ZonedDateTime;
 import java.util.UUID;
-import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -12,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Data
 @Entity
@@ -32,8 +32,9 @@ public class PasswordReset {
   @Column(unique = true)
   private String token;
 
-  @Basic
-  private Timestamp timestamp;
+  @Column(updatable = false)
+  @CreationTimestamp
+  private ZonedDateTime creation;
 
   @Builder.Default
   private boolean isActive = true;

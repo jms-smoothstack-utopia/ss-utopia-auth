@@ -16,13 +16,15 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class ExceptionControllerAdvisor {
 
+  public static final String ERROR_KEY = "error";
+  public static final String STATUS_KEY = "status";
+
   @ResponseStatus(HttpStatus.CONFLICT)
   @ExceptionHandler(DuplicateEmailException.class)
   public Map<String, Object> duplicateEmailException(DuplicateEmailException ex) {
     log.error(ex.getMessage());
 
-    return Map.of("error", "duplicate email, account already exists.",
-                  "email", ex.getEmail());
+    return baseResponse(ex.getMessage(), HttpStatus.CONFLICT);
   }
 
   @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -30,18 +32,16 @@ public class ExceptionControllerAdvisor {
   public Map<String, Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
     log.error(ex.getMessage());
 
-    var response = new HashMap<String, Object>();
-
-    response.put("error", "Invalid field(s) in request.");
-    response.put("status", 400);
+    var response = baseResponse("Invalid field(s) in request.", HttpStatus.BAD_REQUEST);
 
     // get field name and error message as map
     var errors = ex.getBindingResult()
         .getAllErrors()
         .stream()
         .collect(
-            Collectors.toMap(error -> ((FieldError) error).getField(),
-                             error -> getErrorMessageOrDefault((FieldError) error)));
+            Collectors.toMap(
+                error -> ((FieldError) error).getField(),
+                error -> getErrorMessageOrDefault((FieldError) error)));
 
     response.put("message", errors);
     return response;
@@ -52,11 +52,7 @@ public class ExceptionControllerAdvisor {
   public Map<String, Object> handleNoSuchElementException(NoSuchElementException ex) {
     log.error(ex.getMessage());
 
-    var response = new HashMap<String, Object>();
-    response.put("error", ex.getMessage());
-    response.put("status", HttpStatus.BAD_REQUEST.value());
-
-    return response;
+    return baseResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
   }
 
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -64,10 +60,8 @@ public class ExceptionControllerAdvisor {
   public Map<String, Object> handleEmailNotSentException(EmailNotSentException ex) {
     log.error(ex.getMessage());
 
-    var response = new HashMap<String, Object>();
-    response.put("error", "Unable to send email. Please try again.");
-    response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-    return response;
+    return baseResponse("Unable to send email. Please try again.",
+                        HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
   @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -75,10 +69,7 @@ public class ExceptionControllerAdvisor {
   public Map<String, Object> handleInvalidTokenException(InvalidTokenException ex) {
     log.error(ex.getMessage());
 
-    var response = new HashMap<String, Object>();
-    response.put("error", ex.getMessage());
-    response.put("status", HttpStatus.BAD_REQUEST.value());
-    return response;
+    return baseResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
   }
 
   @ResponseStatus(HttpStatus.CONFLICT)
@@ -87,11 +78,9 @@ public class ExceptionControllerAdvisor {
       IllegalCustomerAccountDeletionException ex) {
     log.error(ex.getMessage());
 
-    var response = new HashMap<String, Object>();
-    response.put("error", ex.getMessage());
-    response.put("role", ex.getUserAccount().getUserRole().getRoleName());
-    response.put("status", HttpStatus.CONFLICT.value());
-    return response;
+    var baseResponse = baseResponse(ex.getMessage(), HttpStatus.CONFLICT);
+    baseResponse.put("role", ex.getUserAccount().getUserRole().getRoleName());
+    return baseResponse;
   }
 
   private String getErrorMessageOrDefault(FieldError error) {
@@ -100,5 +89,12 @@ public class ExceptionControllerAdvisor {
 
     log.debug("Field" + error.getField() + " Message: " + msg);
     return msg;
+  }
+
+  private Map<String, Object> baseResponse(String errorMsg, HttpStatus status) {
+    var response = new HashMap<String, Object>();
+    response.put(ERROR_KEY, errorMsg);
+    response.put(STATUS_KEY, status.value());
+    return response;
   }
 }

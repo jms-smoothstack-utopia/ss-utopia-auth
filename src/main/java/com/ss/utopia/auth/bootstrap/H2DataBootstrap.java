@@ -15,13 +15,13 @@ import org.springframework.stereotype.Component;
 public class H2DataBootstrap implements CommandLineRunner {
 
   private final UserAccountRepository userAccountRepository;
-  private final BCryptPasswordEncoder bCryptPasswordEncoder;
+  private final BCryptPasswordEncoder passwordEncoder;
   private String encodedPassword;
 
   @Override
   public void run(String... args) {
     if (userAccountRepository.count() == 0) {
-      encodedPassword = bCryptPasswordEncoder.encode("test");
+      encodedPassword = passwordEncoder.encode("test");
       loadAllTestAccounts();
     }
   }

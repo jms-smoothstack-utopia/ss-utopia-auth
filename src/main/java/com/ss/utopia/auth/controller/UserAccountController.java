@@ -38,11 +38,6 @@ public class UserAccountController {
   private final UserAccountService userAccountService;
   private final PasswordResetService passwordResetService;
 
-  @GetMapping("/test")
-  public ResponseEntity<String> testEndpoint() {
-    return ResponseEntity.ok("{\"msg\":\"You are authenticated.\"}");
-  }
-
   @AdminOnlyPermission
   @GetMapping(produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<List<UserAccount>> getAllAccounts() {
@@ -54,7 +49,8 @@ public class UserAccountController {
   }
 
   @PostMapping(consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity<UUID> createNewAccount(@Valid @RequestBody CreateUserAccountDto createUserAccountDto) {
+  public ResponseEntity<UUID> createNewAccount(@Valid @RequestBody
+                                                   CreateUserAccountDto createUserAccountDto) {
     log.info("POST accounts");
     var userAccount = userAccountService.createNewAccount(createUserAccountDto);
     var userId = userAccount.getId();
@@ -63,21 +59,22 @@ public class UserAccountController {
   }
 
   @PutMapping("/confirm/{confirmationTokenId}")
-  public ResponseEntity<?> confirmAccountRegistration(@PathVariable UUID confirmationTokenId) {
+  public ResponseEntity<Void> confirmAccountRegistration(@PathVariable UUID confirmationTokenId) {
     userAccountService.confirmAccountRegistration(confirmationTokenId);
     return ResponseEntity.noContent().build();
   }
 
   @PostMapping(value = "/password-reset",
       consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity<?> addPasswordReset(@Valid @RequestBody ResetPasswordDto resetPasswordDto) {
-    var token = passwordResetService.addPasswordReset(resetPasswordDto);
+  public ResponseEntity<Void> addPasswordReset(@Valid @RequestBody
+                                                   ResetPasswordDto resetPasswordDto) {
+    passwordResetService.addPasswordReset(resetPasswordDto);
     return ResponseEntity.ok().build();
   }
 
   @GetMapping(value = "/new-password/{token}",
       produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity<?> tokenCheck(@PathVariable String token) {
+  public ResponseEntity<Void> tokenCheck(@PathVariable String token) {
     log.info("Checking token: " + token);
     if (passwordResetService.tokenCheck(token)) {
       return ResponseEntity.ok().build();
@@ -88,7 +85,7 @@ public class UserAccountController {
   @PostMapping(value = "/new-password",
       consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
       produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity<?> changePassword(@Valid @RequestBody NewPasswordDto newPasswordDto) {
+  public ResponseEntity<Void> changePassword(@Valid @RequestBody NewPasswordDto newPasswordDto) {
     log.info("Updating password initiated");
     passwordResetService.changePassword(newPasswordDto);
     return ResponseEntity.ok().build();
@@ -96,22 +93,24 @@ public class UserAccountController {
 
   @AdminOnlyPermission
   @DeleteMapping("/{accountId}")
-  public ResponseEntity<?> deleteAccount(@PathVariable UUID accountId) {
+  public ResponseEntity<Void> deleteAccount(@PathVariable UUID accountId) {
     userAccountService.deleteAccountById(accountId);
     return ResponseEntity.noContent().build();
   }
 
   @ServiceOnlyPermission
   @PutMapping(value = "/customer/{customerId}", consumes = MediaType.TEXT_PLAIN_VALUE)
-  public ResponseEntity<?> updateCustomerEmail(@PathVariable UUID customerId,
-                                               @Valid @Email @NotNull @NotBlank @RequestBody String newEmail) {
+  public ResponseEntity<Void> updateCustomerEmail(@PathVariable UUID customerId,
+                                                  @Valid @Email @NotNull @NotBlank @RequestBody
+                                                      String newEmail) {
     userAccountService.updateEmail(customerId, newEmail);
     return ResponseEntity.ok().build();
   }
 
   @ServiceOnlyPermission
   @DeleteMapping("/customer")
-  public ResponseEntity<?> initiateCustomerDeletion(@Valid @RequestBody DeleteAccountDto deleteAccountDto) {
+  public ResponseEntity<Void> initiateCustomerDeletion(@Valid @RequestBody
+                                                           DeleteAccountDto deleteAccountDto) {
     userAccountService.initiateCustomerDeletion(deleteAccountDto);
     return ResponseEntity.noContent().build();
   }
