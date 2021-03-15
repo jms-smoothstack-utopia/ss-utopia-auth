@@ -3,6 +3,7 @@ package com.ss.utopia.auth.service;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -47,7 +48,7 @@ public class AccountActionTokenServiceImplTests {
   AccountActionToken mockExpiredConfirmationToken = AccountActionToken.builder()
       .token(mockValidConfirmationToken.getToken())
       .ownerAccountId(UUID.randomUUID())
-      .active(false)
+      .active(true)
       .action(AccountAction.CONFIRMATION)
       .creation(tokenCreation.minusMinutes(AccountAction.CONFIRMATION.getMinutesToLive() + 1))
       .build();
@@ -103,5 +104,42 @@ public class AccountActionTokenServiceImplTests {
 
     assertThrows(InvalidTokenException.class,
                  () -> service.getAndValidateToken(mockExpiredConfirmationToken.getToken()));
+  }
+
+  @Test
+  void test_getAndValidateToken_ReturnsValidToken() {
+    when(accountActionTokenRepository.findById(mockValidConfirmationToken.getToken()))
+        .thenReturn(Optional.of(mockValidConfirmationToken));
+
+    try {
+      var result = service.getAndValidateToken(mockValidConfirmationToken.getToken());
+      assertEquals(mockValidConfirmationToken, result);
+    } catch (InvalidTokenException ex) {
+      fail(ex);
+    }
+  }
+
+  @Test
+  void test_deleteToken_ByToken_DeletesToken() {
+    when(accountActionTokenRepository.findById(mockValidConfirmationToken.getToken()))
+        .thenReturn(Optional.of(mockValidConfirmationToken));
+
+    service.deleteToken(mockValidConfirmationToken);
+
+    Mockito.verify(accountActionTokenRepository).findById(mockValidConfirmationToken.getToken());
+
+    Mockito.verify(accountActionTokenRepository).delete(mockValidConfirmationToken);
+  }
+
+  @Test
+  void test_deleteToken_ById_DeletesToken() {
+    when(accountActionTokenRepository.findById(mockValidConfirmationToken.getToken()))
+        .thenReturn(Optional.of(mockValidConfirmationToken));
+
+    service.deleteToken(mockValidConfirmationToken.getToken());
+
+    Mockito.verify(accountActionTokenRepository).findById(mockValidConfirmationToken.getToken());
+
+    Mockito.verify(accountActionTokenRepository).delete(mockValidConfirmationToken);
   }
 }

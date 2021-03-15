@@ -1,8 +1,6 @@
 package com.ss.utopia.auth.exception;
 
-import org.springframework.dao.DuplicateKeyException;
-
-public class DuplicateEmailException extends DuplicateKeyException {
+public class DuplicateEmailException extends IllegalStateException {
 
   private final String email;
 

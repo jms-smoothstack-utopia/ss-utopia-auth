@@ -43,7 +43,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     log.debug("Get all accounts.");
     return userAccountRepository.findAll()
         .stream()
-        .peek(account -> account.setPassword(null))
+        .peek(account -> account.setPassword(null)) //NOSONAR
         .collect(Collectors.toList());
   }
 

@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -75,6 +76,9 @@ public class RestTemplateEmailClient implements EmailClient {
   }
 
   private void handleResponse(ResponseEntity<String> response, AbstractUrlEmail email) {
+    if (response == null) {
+      throw new EmailNotSentException("NULL RESPONSE", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
     if (response.getStatusCode().is2xxSuccessful()) {
       log.debug("Email sent to: " + email.getRecipient());
       log.debug(email.getSubject());
