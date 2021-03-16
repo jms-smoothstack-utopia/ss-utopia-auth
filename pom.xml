@@ -11,7 +11,7 @@
   </parent>
   <groupId>com.github.jms-smoothstack-utopia</groupId>
   <artifactId>ss-utopia-auth</artifactId>
-  <version>1.0</version>
+  <version>1.1-SNAPSHOT</version>
   <name>Utopia Auth Service</name>
   <description>Utopia Authentication and Authorization Service</description>
   <properties>
