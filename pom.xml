@@ -170,7 +170,7 @@
                 <dockerFile>Dockerfile</dockerFile>
                 <tags>
                   <tag>latest</tag>
-                  <tag>${project.version}</tag>
+                  <tag>${git.branch}.${git.commit.id.abbrev}.${project.version}</tag>
                 </tags>
               </build>
             </image>
@@ -287,6 +287,31 @@
         </configuration>
       </plugin>
 
+      <!-- Git Commit/Branch access at build time-->
+      <plugin>
+        <groupId>pl.project13.maven</groupId>
+        <artifactId>git-commit-id-plugin</artifactId>
+        <version>4.0.0</version>
+        <executions>
+          <execution>
+            <id>get-the-git-infos</id>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+            <phase>initialize</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <generateGitPropertiesFile>true</generateGitPropertiesFile>
+          <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
+          </generateGitPropertiesFilename>
+          <includeOnlyProperties>
+            <includeOnlyProperty>^git.branch$</includeOnlyProperty>
+            <includeOnlyProperty>^git.commit.id.abbrev$</includeOnlyProperty>
+          </includeOnlyProperties>
+          <commitIdGenerationMode>full</commitIdGenerationMode>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
