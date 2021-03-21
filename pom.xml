@@ -154,7 +154,7 @@
       <plugin>
         <groupId>pl.project13.maven</groupId>
         <artifactId>git-commit-id-plugin</artifactId>
-        <version>4.0.0</version>
+        <version>4.0.1</version>
         <executions>
           <execution>
             <id>get-the-git-infos</id>
@@ -165,6 +165,8 @@
           </execution>
         </executions>
         <configuration>
+          <useNativeGit>true</useNativeGit>
+          <injectAllReactorProjects>true</injectAllReactorProjects>
           <generateGitPropertiesFile>true</generateGitPropertiesFile>
           <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
           </generateGitPropertiesFilename>
