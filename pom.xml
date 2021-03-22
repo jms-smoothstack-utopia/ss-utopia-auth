@@ -11,13 +11,13 @@
   </parent>
   <groupId>com.github.jms-smoothstack-utopia</groupId>
   <artifactId>ss-utopia-auth</artifactId>
-  <version>1.0</version>
+  <version>1.1</version>
   <name>Utopia Auth Service</name>
   <description>Utopia Authentication and Authorization Service</description>
   <properties>
     <java.version>11</java.version>
     <spring-cloud.version>2020.0.1</spring-cloud.version>
-    <docker.image.prefix>ss-utopia</docker.image.prefix>
+    <docker.image.prefix>${git.branch}/ss-utopia</docker.image.prefix>
     <docker.image.name>auth-service</docker.image.name>
     <spotbugs.version>4.0.0</spotbugs.version>
     <sonar.coverage.exclusions>
@@ -150,6 +150,34 @@
         </configuration>
       </plugin>
 
+      <!-- Git Commit/Branch access at build time-->
+      <plugin>
+        <groupId>pl.project13.maven</groupId>
+        <artifactId>git-commit-id-plugin</artifactId>
+        <version>4.0.1</version>
+        <executions>
+          <execution>
+            <id>get-the-git-infos</id>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+            <phase>initialize</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <useNativeGit>true</useNativeGit>
+          <injectAllReactorProjects>true</injectAllReactorProjects>
+          <generateGitPropertiesFile>true</generateGitPropertiesFile>
+          <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
+          </generateGitPropertiesFilename>
+          <includeOnlyProperties>
+            <includeOnlyProperty>^git.branch$</includeOnlyProperty>
+            <includeOnlyProperty>^git.commit.id.abbrev$</includeOnlyProperty>
+          </includeOnlyProperties>
+          <commitIdGenerationMode>full</commitIdGenerationMode>
+        </configuration>
+      </plugin>
+
       <!-- Integrated plugin for use with Docker and Maven,
            use goals `docker:build` and `docker:push` -->
       <plugin>
@@ -170,7 +198,7 @@
                 <dockerFile>Dockerfile</dockerFile>
                 <tags>
                   <tag>latest</tag>
-                  <tag>${project.version}</tag>
+                  <tag>${git.branch}.${git.commit.id.abbrev}.${project.version}</tag>
                 </tags>
               </build>
             </image>
@@ -286,7 +314,6 @@
           <destFile>target/jacoco.exec</destFile>
         </configuration>
       </plugin>
-
     </plugins>
   </build>
 
