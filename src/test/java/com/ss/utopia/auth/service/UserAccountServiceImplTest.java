@@ -8,11 +8,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import com.ss.utopia.auth.client.EmailClient;
 import com.ss.utopia.auth.dto.CreateUserAccountDto;
 import com.ss.utopia.auth.dto.DeleteAccountDto;
+import com.ss.utopia.auth.dto.NewPasswordDto;
 import com.ss.utopia.auth.entity.AccountAction;
 import com.ss.utopia.auth.entity.AccountActionToken;
 import com.ss.utopia.auth.entity.UserAccount;
@@ -20,6 +22,7 @@ import com.ss.utopia.auth.entity.UserRole;
 import com.ss.utopia.auth.exception.DuplicateEmailException;
 import com.ss.utopia.auth.exception.IllegalAccountModificationException;
 import com.ss.utopia.auth.exception.IllegalCustomerAccountDeletionException;
+import com.ss.utopia.auth.exception.InvalidTokenException;
 import com.ss.utopia.auth.exception.NoSuchAccountActionToken;
 import com.ss.utopia.auth.exception.NoSuchUserAccountException;
 import com.ss.utopia.auth.repository.UserAccountRepository;
@@ -392,5 +395,127 @@ class UserAccountServiceImplTest {
     };
 
     elevatedUserList.forEach(test::apply);
+  }
+
+  @Test
+  void test_initiatePasswordReset_DoesNotThrowExceptionOnValidEmail() {
+    when(userAccountRepository.findByEmail(mockCustomerAccount.getEmail()))
+        .thenReturn(Optional.of(mockCustomerAccount));
+
+    var mockActionToken = AccountActionToken.builder()
+        .token(UUID.randomUUID())
+        .ownerAccountId(mockCustomerAccount.getId())
+        .creation(ZonedDateTime.now())
+        .action(AccountAction.PASSWORD_RESET)
+        .active(true)
+        .build();
+
+    when(accountActionTokenService.createToken(mockCustomerAccount.getId(),
+                                               AccountAction.PASSWORD_RESET))
+        .thenReturn(mockActionToken);
+
+    assertDoesNotThrow(() -> service.initiatePasswordReset(mockCustomerAccount.getEmail()));
+
+    Mockito.verify(emailClient, times(1))
+        .sendForgotPasswordEmail(mockCustomerAccount.getEmail(), mockActionToken.getToken());
+  }
+
+  @Test
+  void test_initiatePasswordReset_ThrowsNoSuchUserExceptionIfNotFound() {
+    var email = "test@test.com";
+
+    when(userAccountRepository.findByEmail(any()))
+        .thenReturn(Optional.empty());
+
+    assertThrows(NoSuchUserAccountException.class,
+                 () -> service.initiatePasswordReset(email));
+  }
+
+  @Test
+  void test_completePasswordReset_UpdatesPasswordOnValidDto() {
+    var newPassword = "some new password";
+    var encryptedNewPassword = "some encrypted new password";
+
+    when(passwordEncoder.encode(newPassword))
+        .thenReturn(encryptedNewPassword);
+
+    var dto = NewPasswordDto.builder()
+        .token(UUID.randomUUID())
+        .password(newPassword)
+        .build();
+
+    var mockActionToken = AccountActionToken.builder()
+        .token(dto.getToken())
+        .action(AccountAction.PASSWORD_RESET)
+        .ownerAccountId(mockCustomerAccount.getId())
+        .creation(ZonedDateTime.now().minusMinutes(15))
+        .active(true)
+        .build();
+
+    when(accountActionTokenService.getAndValidateToken(dto.getToken()))
+        .thenReturn(mockActionToken);
+
+    when(userAccountRepository.findById(mockCustomerAccount.getId()))
+        .thenReturn(Optional.of(mockCustomerAccount));
+
+    service.completePasswordReset(dto);
+
+    Mockito.verify(userAccountRepository, times(1))
+        .save(mockCustomerAccount);
+
+    Mockito.verify(accountActionTokenService).deleteToken(mockActionToken);
+
+    assertEquals(encryptedNewPassword, mockCustomerAccount.getPassword());
+
+    mockCustomerAccount.setPassword(validHashedPassword);
+  }
+
+  @Test
+  void test_completePasswordReset_ThrowsNoSuchUserIfNotFound() {
+    var newPassword = "some new password";
+    var dto = NewPasswordDto.builder()
+        .token(UUID.randomUUID())
+        .password(newPassword)
+        .build();
+
+    var mockActionToken = AccountActionToken.builder()
+        .token(dto.getToken())
+        .action(AccountAction.PASSWORD_RESET)
+        .ownerAccountId(mockCustomerAccount.getId())
+        .creation(ZonedDateTime.now().minusMinutes(15))
+        .active(false)
+        .build();
+
+    when(accountActionTokenService.getAndValidateToken(any()))
+        .thenReturn(mockActionToken);
+
+    when(userAccountRepository.findById(any()))
+        .thenReturn(Optional.empty());
+
+    assertThrows(NoSuchUserAccountException.class,
+                 () -> service.completePasswordReset(new NewPasswordDto()));
+  }
+
+  @Test
+  void test_completePasswordReset_ThrowsInvalidTokenExceptionIfNotValid() {
+    var newPassword = "some new password";
+
+    var dto = NewPasswordDto.builder()
+        .token(UUID.randomUUID())
+        .password(newPassword)
+        .build();
+
+    var mockActionToken = AccountActionToken.builder()
+        .token(dto.getToken())
+        .action(AccountAction.PASSWORD_RESET)
+        .ownerAccountId(mockCustomerAccount.getId())
+        .creation(ZonedDateTime.now().minusMinutes(15))
+        .active(false)
+        .build();
+
+    when(accountActionTokenService.getAndValidateToken(any()))
+        .thenThrow(new InvalidTokenException(mockActionToken));
+
+    assertThrows(InvalidTokenException.class, () -> service.completePasswordReset(dto));
   }
 }

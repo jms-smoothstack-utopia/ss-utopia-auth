@@ -14,7 +14,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ss.utopia.auth.dto.DeleteAccountDto;
 import com.ss.utopia.auth.security.SecurityConstants;
-import com.ss.utopia.auth.service.PasswordResetService;
+import com.ss.utopia.auth.service.AccountActionTokenService;
 import com.ss.utopia.auth.service.UserAccountService;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -45,7 +45,7 @@ public class UserAccountControllerSecurityTests {
   @MockBean
   UserAccountService userAccountService;
   @MockBean
-  PasswordResetService passwordResetService;
+  AccountActionTokenService accountActionTokenService;
 
   MockMvc mvc;
 

@@ -47,7 +47,7 @@ public class RestTemplateEmailClient implements EmailClient {
   }
 
   @Override
-  public void sendForgetPasswordEmail(String token, String recipientEmail) {
+  public void sendForgotPasswordEmail(String recipientEmail, UUID token) {
     var resetPasswordUrl = passwordResetBaseUrl + "/" + token;
 
     var email = new PasswordResetEmail(recipientEmail, resetPasswordUrl);
@@ -67,9 +67,9 @@ public class RestTemplateEmailClient implements EmailClient {
   }
 
   @Override
-  public void sendDeleteAccountEmail(String recipient, UUID token) {
+  public void sendDeleteAccountEmail(String recipientEmail, UUID token) {
     var deletionUrl = deletionBaseUrl + "/" + token;
-    var email = new DeleteAccountEmail(recipient, deletionUrl);
+    var email = new DeleteAccountEmail(recipientEmail, deletionUrl);
     var response = restTemplate.postForEntity(sesEndpoint, email, String.class);
 
     handleResponse(response, email);

@@ -3,6 +3,7 @@ package com.ss.utopia.auth.service;
 import com.ss.utopia.auth.client.EmailClient;
 import com.ss.utopia.auth.dto.CreateUserAccountDto;
 import com.ss.utopia.auth.dto.DeleteAccountDto;
+import com.ss.utopia.auth.dto.NewPasswordDto;
 import com.ss.utopia.auth.entity.AccountAction;
 import com.ss.utopia.auth.entity.UserAccount;
 import com.ss.utopia.auth.entity.UserRole;
@@ -165,6 +166,31 @@ public class UserAccountServiceImpl implements UserAccountService {
     deleteAccountById(ownerId);
     accountActionTokenService.deleteToken(actionToken);
     return account.getId();
+  }
+
+  @Override
+  public void initiatePasswordReset(String accountEmail) {
+    log.debug("Initiate password reset email=" + accountEmail);
+    var account = getByEmail(accountEmail);
+
+    var actionToken = accountActionTokenService.createToken(account.getId(),
+                                                            AccountAction.PASSWORD_RESET);
+
+    emailClient.sendForgotPasswordEmail(account.getEmail(), actionToken.getToken());
+  }
+
+  @Override
+  public void completePasswordReset(NewPasswordDto newPasswordDto) {
+    log.debug("Change password token=" + newPasswordDto.getToken());
+
+    var actionToken = accountActionTokenService.getAndValidateToken(newPasswordDto.getToken());
+    var account = getById(actionToken.getOwnerAccountId());
+
+    account.setPassword(passwordEncoder.encode(newPasswordDto.getPassword()));
+
+    updateAccount(account);
+
+    accountActionTokenService.deleteToken(actionToken);
   }
 
   private void authenticate(DeleteAccountDto deleteAccountDto) {

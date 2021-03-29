@@ -6,9 +6,9 @@ import org.springframework.stereotype.Component;
 @Component
 public interface EmailClient {
 
-  void sendForgetPasswordEmail(String token, String email);
+  void sendForgotPasswordEmail(String recipientEmail, UUID token);
 
-  void sendConfirmAccountEmail(String recipient, UUID confirmationToken);
+  void sendConfirmAccountEmail(String recipientEmail, UUID token);
 
-  void sendDeleteAccountEmail(String recipient, UUID token);
+  void sendDeleteAccountEmail(String recipientEmail, UUID token);
 }
