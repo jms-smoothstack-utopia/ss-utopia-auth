@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.ss.utopia.auth.config.AccountActionMinutesToLiveConfig;
 import com.ss.utopia.auth.entity.AccountAction;
 import com.ss.utopia.auth.entity.AccountActionToken;
 import com.ss.utopia.auth.exception.InvalidTokenException;
@@ -23,11 +24,14 @@ public class AccountActionTokenServiceImplTests {
 
   AccountActionTokenRepository accountActionTokenRepository =
       Mockito.mock(AccountActionTokenRepository.class);
+  AccountActionMinutesToLiveConfig ttlConfig = Mockito.mock(AccountActionMinutesToLiveConfig.class);
 
   AccountActionTokenService service =
-      new AccountActionTokenServiceImpl(accountActionTokenRepository);
+      new AccountActionTokenServiceImpl(accountActionTokenRepository, ttlConfig);
 
   ZonedDateTime tokenCreation = ZonedDateTime.now();
+
+  int mockTimeToLive = 15;
 
   AccountActionToken mockValidConfirmationToken = AccountActionToken.builder()
       .token(UUID.randomUUID())
@@ -50,12 +54,13 @@ public class AccountActionTokenServiceImplTests {
       .ownerAccountId(UUID.randomUUID())
       .active(true)
       .action(AccountAction.CONFIRMATION)
-      .creation(tokenCreation.minusMinutes(AccountAction.CONFIRMATION.getMinutesToLive() + 1))
+      .creation(tokenCreation.minusMinutes(mockTimeToLive + 1))
       .build();
 
   @BeforeEach
   void beforeEach() {
     Mockito.reset(accountActionTokenRepository);
+    when(ttlConfig.getMinutesToLive(any())).thenReturn(mockTimeToLive);
   }
 
   @Test
