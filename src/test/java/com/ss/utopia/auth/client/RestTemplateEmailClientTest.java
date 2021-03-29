@@ -45,7 +45,7 @@ class RestTemplateEmailClientTest {
 
   @Test
   void test_sendForgotPasswordEmail_CreatesAndPostsPasswordResetObject() {
-    var mockToken = UUID.randomUUID().toString();
+    var mockToken = UUID.randomUUID();
     var mockEmail = "test@test.com";
 
     var mockUrl = mockPasswordResetBaseUrl + "/" + mockToken;
@@ -55,7 +55,7 @@ class RestTemplateEmailClientTest {
     when(restTemplate.postForEntity(mockSesEndpoint, expectedObject, String.class))
         .thenReturn(ResponseEntity.ok("some response"));
 
-    assertDoesNotThrow(() -> emailClient.sendForgetPasswordEmail(mockToken, mockEmail));
+    assertDoesNotThrow(() -> emailClient.sendForgotPasswordEmail(mockEmail, mockToken));
 
     Mockito.verify(restTemplate)
         .postForEntity(mockSesEndpoint, expectedObject, String.class);
@@ -63,7 +63,7 @@ class RestTemplateEmailClientTest {
 
   @Test
   void test_sendForgotPasswordEmail_ThrowsEmailNotSentExceptionIfBadResponse() {
-    var mockToken = UUID.randomUUID().toString();
+    var mockToken = UUID.randomUUID();
     var mockEmail = "test@test.com";
 
     var mockUrl = mockPasswordResetBaseUrl + "/" + mockToken;
@@ -74,7 +74,7 @@ class RestTemplateEmailClientTest {
         .thenReturn(ResponseEntity.badRequest().build());
 
     assertThrows(EmailNotSentException.class,
-                 () -> emailClient.sendForgetPasswordEmail(mockToken, mockEmail));
+                 () -> emailClient.sendForgotPasswordEmail(mockEmail, mockToken));
 
     Mockito.verify(restTemplate)
         .postForEntity(mockSesEndpoint, expectedObject, String.class);
@@ -82,7 +82,7 @@ class RestTemplateEmailClientTest {
 
   @Test
   void test_sendForgotPasswordEmail_ThrowsEmailNotSentExceptionIfNullResponse() {
-    var mockToken = UUID.randomUUID().toString();
+    var mockToken = UUID.randomUUID();
     var mockEmail = "test@test.com";
 
     var mockUrl = mockPasswordResetBaseUrl + "/" + mockToken;
@@ -93,7 +93,7 @@ class RestTemplateEmailClientTest {
         .thenReturn(null);
 
     assertThrows(EmailNotSentException.class,
-                 () -> emailClient.sendForgetPasswordEmail(mockToken, mockEmail));
+                 () -> emailClient.sendForgotPasswordEmail(mockEmail, mockToken));
 
     Mockito.verify(restTemplate)
         .postForEntity(mockSesEndpoint, expectedObject, String.class);
