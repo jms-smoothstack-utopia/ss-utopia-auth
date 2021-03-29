@@ -1,5 +1,6 @@
 package com.ss.utopia.auth.service;
 
+import com.ss.utopia.auth.config.AccountActionMinutesToLiveConfig;
 import com.ss.utopia.auth.entity.AccountAction;
 import com.ss.utopia.auth.entity.AccountActionToken;
 import com.ss.utopia.auth.exception.InvalidTokenException;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class AccountActionTokenServiceImpl implements AccountActionTokenService {
 
   private final AccountActionTokenRepository accountActionTokenRepository;
+  private final AccountActionMinutesToLiveConfig ttlConfig;
 
   @Override
   public AccountActionToken getToken(UUID token) {
@@ -35,7 +37,7 @@ public class AccountActionTokenServiceImpl implements AccountActionTokenService 
   public void validateToken(AccountActionToken token) {
     var now = ZonedDateTime.now();
     var creation = token.getCreation();
-    var expiration = creation.plusMinutes(token.getAction().getMinutesToLive());
+    var expiration = creation.plusMinutes(ttlConfig.getMinutesToLive(token.getAction()));
 
     if (!token.isActive() || now.isAfter(expiration)) {
       throw new InvalidTokenException(token);
